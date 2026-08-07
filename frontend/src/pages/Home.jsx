@@ -271,11 +271,7 @@ const Home = () => {
       {/* HERO SECTION                                                             */}
       {/* ========================================================================= */}
       <section className="relative z-10 pt-32 pb-20 md:pt-40 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EDF5FF] dark:bg-[#2F80ED]/10 border border-[#2F80ED]/20 text-[#2F80ED] dark:text-[#56CCF2] text-[14px] font-medium mb-8">
-          <Sparkles className="w-4 h-4" />
-          <span>Next-Gen AI Matching Protocol V2.4 Live</span>
-          <span className="w-2 h-2 rounded-full bg-[#2F80ED] dark:bg-[#56CCF2] animate-pulse ml-1" />
-        </div>
+        
 
         <h1 className="max-w-4xl text-[44px] sm:text-[60px] lg:text-[70px] font-extrabold tracking-tight text-[#111827] dark:text-white leading-[1.1] mb-6">
           Find your next career breakthrough with{" "}
