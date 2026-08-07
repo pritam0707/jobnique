@@ -49,30 +49,30 @@ const FormattedAIOutput = ({ text }) => {
 
         if (headerTitle.toLowerCase().includes("overall score")) return null;
 
-        let icon = <Zap className="w-4 h-4 text-blue-600" />;
-        let headerColor = "text-blue-700";
-        let bulletIcon = <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />;
+        let icon = <Zap className="w-4 h-4 text-[#2F80ED] dark:text-[#56CCF2]" />;
+        let headerColor = "text-[#2F80ED] dark:text-[#56CCF2]";
+        let bulletIcon = <span className="w-1.5 h-1.5 rounded-full bg-[#2F80ED] dark:bg-[#56CCF2] mt-2 shrink-0" />;
 
         if (headerTitle.toLowerCase().includes("strength")) {
-          icon = <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
-          headerColor = "text-emerald-700";
+          icon = <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+          headerColor = "text-emerald-700 dark:text-emerald-400";
           bulletIcon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />;
         } else if (headerTitle.toLowerCase().includes("improve") || headerTitle.toLowerCase().includes("gap")) {
-          icon = <AlertTriangle className="w-4 h-4 text-amber-600" />;
-          headerColor = "text-amber-700";
+          icon = <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
+          headerColor = "text-amber-700 dark:text-amber-400";
           bulletIcon = <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />;
         } else if (headerTitle.toLowerCase().includes("keyword") || headerTitle.toLowerCase().includes("skill")) {
-          icon = <Tag className="w-4 h-4 text-sky-600" />;
-          headerColor = "text-sky-700";
+          icon = <Tag className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
+          headerColor = "text-sky-700 dark:text-sky-400";
           bulletIcon = <Tag className="w-3.5 h-3.5 text-sky-500 shrink-0 mt-0.5" />;
         }
 
         const lines = bodyText.split("\n").filter((l) => l.trim() !== "");
 
         return (
-          <div key={idx} className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
+          <div key={idx} className="p-4 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl space-y-2">
             {headerTitle && (
-              <h3 className={`text-sm font-bold ${headerColor} flex items-center gap-2 border-b border-slate-200 pb-2 mb-3`}>
+              <h3 className={`text-sm font-bold ${headerColor} flex items-center gap-2 border-b border-[#E5E7EB] dark:border-[#374151] pb-2 mb-3`}>
                 {icon}
                 <span>{headerTitle}</span>
               </h3>
@@ -85,12 +85,12 @@ const FormattedAIOutput = ({ text }) => {
 
                 const formattedHtml = cleanLine.replace(
                   /\*\*(.*?)\*\*/g,
-                  '<strong class="text-slate-900 font-semibold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">$1</strong>'
+                  '<strong class="text-[#111827] dark:text-white font-semibold bg-[#EDF5FF] dark:bg-[#2F80ED]/20 px-1.5 py-0.5 rounded border border-[#2F80ED]/20">$1</strong>'
                 );
 
                 if (isBullet) {
                   return (
-                    <div key={lIdx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    <div key={lIdx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
                       {bulletIcon}
                       <p className="flex-1" dangerouslySetInnerHTML={{ __html: formattedHtml }} />
                     </div>
@@ -98,7 +98,7 @@ const FormattedAIOutput = ({ text }) => {
                 }
 
                 return (
-                  <p key={lIdx} className="text-xs sm:text-sm text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: formattedHtml }} />
+                  <p key={lIdx} className="text-xs sm:text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed" dangerouslySetInnerHTML={{ __html: formattedHtml }} />
                 );
               })}
             </div>
@@ -125,20 +125,20 @@ const ResumeScoreCard = ({ text }) => {
 
   const percentage = Math.min(100, Math.round((scoreNum / maxScore) * 100));
 
-  let scoreColor = "text-emerald-600";
+  let scoreColor = "text-emerald-600 dark:text-emerald-400";
   let strokeColor = "#10B981";
-  let badgeBg = "bg-emerald-50 border-emerald-200 text-emerald-700";
+  let badgeBg = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300";
   let label = "Strong Candidate";
 
   if (percentage < 50) {
-    scoreColor = "text-red-600";
+    scoreColor = "text-red-600 dark:text-red-400";
     strokeColor = "#EF4444";
-    badgeBg = "bg-red-50 border-red-200 text-red-700";
+    badgeBg = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300";
     label = "Needs Optimization";
   } else if (percentage < 75) {
-    scoreColor = "text-amber-600";
+    scoreColor = "text-amber-600 dark:text-amber-400";
     strokeColor = "#F59E0B";
-    badgeBg = "bg-amber-50 border-amber-200 text-amber-700";
+    badgeBg = "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300";
     label = "Good Potential";
   }
 
@@ -146,7 +146,7 @@ const ResumeScoreCard = ({ text }) => {
   const summaryText = summaryMatch ? summaryMatch[1].trim() : "";
 
   return (
-    <div className="p-5 sm:p-6 bg-blue-600 border border-blue-500 rounded-3xl shadow-lg shadow-blue-500/15 relative overflow-hidden mb-6 text-white">
+    <div className="p-5 sm:p-6 bg-gradient-to-r from-[#2F80ED] to-[#2563EB] border border-[#2F80ED] rounded-3xl shadow-lg shadow-[#2F80ED]/15 relative overflow-hidden mb-6 text-white">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center sm:text-left flex-1">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold">
@@ -163,11 +163,11 @@ const ResumeScoreCard = ({ text }) => {
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-2 bg-white p-4 rounded-2xl shrink-0 min-w-[150px] shadow-sm text-slate-800">
+        <div className="flex flex-col items-center gap-2 bg-white dark:bg-[#111827] p-4 rounded-2xl shrink-0 min-w-[150px] shadow-sm text-[#111827] dark:text-white transition-colors duration-300">
           <div className="relative w-20 h-20 flex items-center justify-center">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
               <path
-                className="text-slate-100"
+                className="text-[#F7FAFC] dark:text-[#1F2937]"
                 strokeWidth="3.5"
                 stroke="currentColor"
                 fill="none"
@@ -322,34 +322,34 @@ const Profile = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#F4F7FB] text-slate-800 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="relative min-h-screen bg-[#F7FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F3F4F6] pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-300">
       
       <div className="relative z-10 max-w-5xl mx-auto space-y-8">
         
         {/* Profile Banner */}
-        <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
-          <div className="w-20 h-20 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-3xl shadow-lg shadow-blue-500/20 shrink-0">
+        <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden transition-colors duration-300">
+          <div className="w-20 h-20 rounded-2xl bg-[#2F80ED] text-white flex items-center justify-center font-bold text-3xl shadow-lg shadow-[#2F80ED]/20 shrink-0">
             {user?.name ? user.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />}
           </div>
 
           <div className="text-center sm:text-left flex-1">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold mb-2">
-              <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDF5FF] dark:bg-[#2F80ED]/10 border border-[#2F80ED]/20 text-[#2F80ED] dark:text-[#56CCF2] text-xs font-semibold mb-2">
+              <BadgeCheck className="w-3.5 h-3.5" />
               <span>{user?.role || "Verified Account"}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight">
               {user?.name || "Account Profile"}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 flex items-center justify-center sm:justify-start gap-2">
-              <Mail className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-xs sm:text-sm text-[#6B7280] dark:text-[#9CA3AF] mt-1 flex items-center justify-center sm:justify-start gap-2">
+              <Mail className="w-3.5 h-3.5 text-[#9CA3AF]" />
               <span>{user?.email}</span>
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="px-5 py-3 bg-blue-50 border border-blue-100 rounded-2xl text-center">
-              <span className="block text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Bookmarked</span>
-              <span className="text-lg font-bold text-blue-900">{user?.savedJobs?.length || 0} Jobs</span>
+            <div className="px-5 py-3 bg-[#EDF5FF] dark:bg-[#1F2937] border border-[#2F80ED]/20 dark:border-[#374151] rounded-2xl text-center">
+              <span className="block text-[11px] font-semibold text-[#2F80ED] dark:text-[#56CCF2] uppercase tracking-wider">Bookmarked</span>
+              <span className="text-lg font-bold text-[#111827] dark:text-white">{user?.savedJobs?.length || 0} Jobs</span>
             </div>
           </div>
         </div>
@@ -358,38 +358,38 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Personal Details */}
-          <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm flex flex-col justify-between transition-colors duration-300">
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                  <div className="p-2 rounded-xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
                     <User className="w-5 h-5" />
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900">Personal Details</h2>
+                  <h2 className="text-lg font-bold text-[#111827] dark:text-white">Personal Details</h2>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Full Name</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <User className="w-4 h-4 text-slate-400" />
+                <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Full Name</span>
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
+                    <User className="w-4 h-4 text-[#9CA3AF]" />
                     {user?.name || "Not provided"}
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Phone Number</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <Phone className="w-4 h-4 text-slate-400" />
+                <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Phone Number</span>
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
+                    <Phone className="w-4 h-4 text-[#9CA3AF]" />
                     {user?.phone || "Not provided"}
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Email Address</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <Mail className="w-4 h-4 text-slate-400" />
+                <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Email Address</span>
+                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
+                    <Mail className="w-4 h-4 text-[#9CA3AF]" />
                     {user?.email}
                   </div>
                 </div>
@@ -398,7 +398,7 @@ const Profile = () => {
 
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="w-full mt-6 py-3 px-5 rounded-2xl font-semibold text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full mt-6 py-3 px-5 rounded-2xl font-semibold text-xs text-[#2F80ED] dark:text-[#56CCF2] bg-[#EDF5FF] dark:bg-[#1F2937] hover:bg-[#2F80ED]/10 dark:hover:bg-[#374151] border border-[#2F80ED]/20 dark:border-[#374151] active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <Edit className="w-4 h-4" />
               <span>Edit Details</span>
@@ -406,37 +406,37 @@ const Profile = () => {
           </div>
 
           {/* Resume Management */}
-          <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between">
+          <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm flex flex-col justify-between transition-colors duration-300">
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 rounded-xl bg-sky-50 text-sky-600">
+                <div className="p-2 rounded-xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
                   <FileText className="w-5 h-5" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-900">Resume Document</h2>
+                <h2 className="text-lg font-bold text-[#111827] dark:text-white">Resume Document</h2>
               </div>
 
               {resumeMsg && (
-                <div className="p-3 mb-5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <p className="text-xs text-emerald-700">{resumeMsg}</p>
+                <div className="p-3 mb-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300">{resumeMsg}</p>
                 </div>
               )}
               {resumeErr && (
-                <div className="p-3 mb-5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <p className="text-xs text-red-700">{resumeErr}</p>
+                <div className="p-3 mb-5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+                  <p className="text-xs text-red-700 dark:text-red-300">{resumeErr}</p>
                 </div>
               )}
 
               {user?.resumeUrl ? (
-                <div className="p-4 mb-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-3">
+                <div className="p-4 mb-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 bg-blue-100 rounded-xl text-blue-600">
+                    <div className="p-2.5 bg-[#EDF5FF] dark:bg-[#2F80ED]/20 rounded-xl text-[#2F80ED] dark:text-[#56CCF2]">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="truncate">
-                      <p className="text-xs font-semibold text-slate-800">Active Resume PDF</p>
-                      <p className="text-[11px] text-slate-400 truncate">{user.resumeUrl}</p>
+                      <p className="text-xs font-semibold text-[#111827] dark:text-white">Active Resume PDF</p>
+                      <p className="text-[11px] text-[#9CA3AF] truncate">{user.resumeUrl}</p>
                     </div>
                   </div>
                   
@@ -445,7 +445,7 @@ const Profile = () => {
                       href={getResumeUrl()}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+                      className="px-3 py-2 bg-white dark:bg-[#111827] hover:bg-[#F7FAFC] dark:hover:bg-[#374151] border border-[#E5E7EB] dark:border-[#374151] text-[#111827] dark:text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
                     >
                       <span>View</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -453,7 +453,7 @@ const Profile = () => {
                     <button
                       onClick={handleResumeDelete}
                       disabled={deletingResume}
-                      className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl transition-all flex items-center justify-center disabled:opacity-50"
+                      className="px-3 py-2 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/60 rounded-xl transition-all flex items-center justify-center disabled:opacity-50"
                       title="Delete Resume"
                     >
                       {deletingResume ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -461,30 +461,30 @@ const Profile = () => {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 mb-5 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center">
-                  <p className="text-xs text-slate-400">No active resume uploaded yet</p>
+                <div className="p-4 mb-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-dashed border-[#E5E7EB] dark:border-[#374151] rounded-2xl text-center">
+                  <p className="text-xs text-[#9CA3AF]">No active resume uploaded yet</p>
                 </div>
               )}
 
               <form onSubmit={handleResumeUpload} className="space-y-4">
-                <div className="relative group border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-2xl p-4 bg-slate-50 text-center transition-all cursor-pointer">
+                <div className="relative group border-2 border-dashed border-[#E5E7EB] dark:border-[#374151] hover:border-[#2F80ED] dark:hover:border-[#56CCF2] rounded-2xl p-4 bg-[#F7FAFC] dark:bg-[#1F2937] text-center transition-all cursor-pointer">
                   <input
                     type="file"
                     accept=".pdf,.txt"
                     onChange={(e) => setResumeFile(e.target.files[0])}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   />
-                  <Upload className="w-6 h-6 text-slate-400 group-hover:text-blue-600 transition-colors mx-auto mb-2" />
-                  <p className="text-xs font-semibold text-slate-700 mb-1">
+                  <Upload className="w-6 h-6 text-[#9CA3AF] group-hover:text-[#2F80ED] dark:group-hover:text-[#56CCF2] transition-colors mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-[#111827] dark:text-white mb-1">
                     {resumeFile ? resumeFile.name : "Choose PDF or TXT to replace/upload"}
                   </p>
-                  <p className="text-[10px] text-slate-400">Max file size 5MB (PDF/TXT only)</p>
+                  <p className="text-[10px] text-[#9CA3AF]">Max file size 5MB (PDF/TXT only)</p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={!resumeFile || uploading}
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-4 bg-[#2F80ED] hover:bg-[#2563EB] text-white rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#2F80ED]/20 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
                     <>
@@ -501,7 +501,7 @@ const Profile = () => {
               </form>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+            <div className="mt-4 pt-4 border-t border-[#E5E7EB] dark:border-[#1F2937] flex items-center justify-center gap-2 text-[11px] text-[#9CA3AF]">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
               <span>Parsed securely for AI recommendation matches</span>
             </div>
@@ -509,14 +509,14 @@ const Profile = () => {
         </div>
 
         {/* SAVED JOBS SECTION */}
-        <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm relative overflow-hidden">
+        <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm relative overflow-hidden transition-colors duration-300">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
+            <div className="p-2.5 rounded-2xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
               <Bookmark className="w-5 h-5 fill-current" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Saved Job Openings</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h2 className="text-lg font-bold text-[#111827] dark:text-white">Saved Job Openings</h2>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">
                 Quickly access positions you bookmarked to complete applications later
               </p>
             </div>
@@ -529,19 +529,19 @@ const Profile = () => {
                 return (
                   <div
                     key={jobId}
-                    className="p-5 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:border-blue-300 transition-all group"
+                    className="p-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl flex flex-col justify-between hover:border-[#2F80ED]/50 transition-all group"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-xl bg-white border border-slate-200 text-slate-500">
+                          <div className="p-2 rounded-xl bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#374151] text-[#6B7280] dark:text-[#9CA3AF]">
                             <Building2 className="w-4 h-4" />
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-blue-600 tracking-wider">
+                            <span className="text-[10px] uppercase font-bold text-[#2F80ED] dark:text-[#56CCF2] tracking-wider">
                               {job.category || "General"}
                             </span>
-                            <p className="text-xs text-slate-600 font-medium">
+                            <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] font-medium">
                               {job.employer?.name || "Verified Employer"}
                             </p>
                           </div>
@@ -549,20 +549,20 @@ const Profile = () => {
 
                         <button
                           onClick={() => handleUnsaveJob(jobId)}
-                          className="p-1.5 rounded-lg bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-all"
+                          className="p-1.5 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/60 hover:bg-red-100 dark:hover:bg-red-900/80 transition-all"
                           title="Remove from Saved"
                         >
                           <Bookmark className="w-3.5 h-3.5 fill-current" />
                         </button>
                       </div>
 
-                      <h3 className="text-sm font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-sm font-bold text-[#111827] dark:text-white mb-1 group-hover:text-[#2F80ED] dark:group-hover:text-[#56CCF2] transition-colors">
                         {job.title}
                       </h3>
 
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mb-4">
+                      <div className="flex items-center gap-3 text-xs text-[#6B7280] dark:text-[#9CA3AF] mb-4">
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                          <MapPin className="w-3.5 h-3.5 text-[#9CA3AF]" />
                           {job.city && job.country ? `${job.city}, ${job.country}` : "Remote"}
                         </span>
                       </div>
@@ -570,7 +570,7 @@ const Profile = () => {
 
                     <Link
                       to={`/jobs/${jobId}`}
-                      className="w-full py-2 bg-white hover:bg-blue-600 border border-slate-200 hover:border-blue-600 text-slate-700 hover:text-white rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                      className="w-full py-2 bg-white dark:bg-[#111827] hover:bg-[#2F80ED] dark:hover:bg-[#2F80ED] border border-[#E5E7EB] dark:border-[#374151] hover:border-[#2F80ED] text-[#111827] dark:text-white hover:text-white rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       <span>View & Apply</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -580,10 +580,10 @@ const Profile = () => {
               })}
             </div>
           ) : (
-            <div className="p-8 border border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center">
-              <Bookmark className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-xs font-semibold text-slate-600">No saved positions yet</p>
-              <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+            <div className="p-8 border border-dashed border-[#E5E7EB] dark:border-[#374151] rounded-2xl bg-[#F7FAFC] dark:bg-[#1F2937] text-center">
+              <Bookmark className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
+              <p className="text-xs font-semibold text-[#111827] dark:text-white">No saved positions yet</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-1 max-w-sm mx-auto">
                 Click the bookmark icon on any position in the open listings tab to save it here for later evaluation.
               </p>
             </div>
@@ -591,20 +591,20 @@ const Profile = () => {
         </div>
 
         {/* AI Resume Analysis Card */}
-        <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm relative overflow-hidden">
+        <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm relative overflow-hidden transition-colors duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-blue-50 text-blue-600">
+              <div className="p-2.5 rounded-2xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
                 <Bot className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-slate-900">AI Resume Optimizer</h2>
-                  <span className="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-bold">
+                  <h2 className="text-lg font-bold text-[#111827] dark:text-white">AI Resume Optimizer</h2>
+                  <span className="px-2 py-0.5 rounded-md bg-[#EDF5FF] dark:bg-[#2F80ED]/20 border border-[#2F80ED]/20 text-[#2F80ED] dark:text-[#56CCF2] text-[10px] font-bold">
                     PRO
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-[#9CA3AF] mt-0.5">
                   Get instant AI feedback on formatting, keyword optimization, and gaps.
                 </p>
               </div>
@@ -613,7 +613,7 @@ const Profile = () => {
             <button
               onClick={handleAnalyze}
               disabled={analyzing || !user?.resumeUrl}
-              className="py-3 px-5 rounded-2xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              className="py-3 px-5 rounded-2xl font-semibold text-xs text-white bg-[#2F80ED] hover:bg-[#2563EB] shadow-lg shadow-[#2F80ED]/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             >
               {analyzing ? (
                 <>
@@ -630,17 +630,17 @@ const Profile = () => {
           </div>
 
           {analyzeErr && (
-            <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-              <p className="text-xs text-red-700 font-medium">{analyzeErr}</p>
+            <div className="p-4 mb-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
+              <p className="text-xs text-red-700 dark:text-red-300 font-medium">{analyzeErr}</p>
             </div>
           )}
 
           {analysis ? (
             <div className="space-y-6">
               <ResumeScoreCard text={analysis} />
-              <div className="p-5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800">
-                <div className="flex items-center gap-2 text-blue-600 font-semibold mb-4 pb-2 border-b border-slate-200">
+              <div className="p-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl text-[#111827] dark:text-white">
+                <div className="flex items-center gap-2 text-[#2F80ED] dark:text-[#56CCF2] font-semibold mb-4 pb-2 border-b border-[#E5E7EB] dark:border-[#374151]">
                   <Cpu className="w-4 h-4" />
                   <span>Detailed AI Insights & Feedback</span>
                 </div>
@@ -649,10 +649,10 @@ const Profile = () => {
             </div>
           ) : (
             !analyzing && (
-              <div className="p-8 border border-dashed border-slate-200 rounded-2xl bg-slate-50 text-center">
-                <Sparkles className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-xs font-semibold text-slate-600">Ready to audit your resume</p>
-                <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+              <div className="p-8 border border-dashed border-[#E5E7EB] dark:border-[#374151] rounded-2xl bg-[#F7FAFC] dark:bg-[#1F2937] text-center">
+                <Sparkles className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
+                <p className="text-xs font-semibold text-[#111827] dark:text-white">Ready to audit your resume</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-1 max-w-sm mx-auto">
                   Click the analyze button above to trigger deep-parsing across technical keywords and hiring manager preferences.
                 </p>
               </div>
@@ -663,16 +663,16 @@ const Profile = () => {
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white border border-slate-100 rounded-3xl shadow-xl overflow-hidden relative">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Edit className="w-5 h-5 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-xl overflow-hidden relative transition-colors duration-300">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] dark:border-[#1F2937] flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#111827] dark:text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-[#2F80ED] dark:text-[#56CCF2]" />
                 Edit Profile
               </h3>
               <button 
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                className="p-1.5 rounded-full hover:bg-[#F7FAFC] dark:hover:bg-[#1F2937] text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -680,76 +680,76 @@ const Profile = () => {
 
             <div className="p-6">
               {profileMsg && (
-                <div className="p-3.5 mb-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <p className="text-xs text-emerald-700 font-medium">{profileMsg}</p>
+                <div className="p-3.5 mb-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">{profileMsg}</p>
                 </div>
               )}
 
               {profileErr && (
-                <div className="p-3.5 mb-5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <p className="text-xs text-red-700 font-medium">{profileErr}</p>
+                <div className="p-3.5 mb-5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl flex items-center gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+                  <p className="text-xs text-red-700 dark:text-red-300 font-medium">{profileErr}</p>
                 </div>
               )}
 
               <form id="profile-form" onSubmit={handleProfileSave} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-2">
                     Full Name
                   </label>
                   <div className="relative flex items-center">
-                    <User className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                    <User className="w-4 h-4 text-[#9CA3AF] absolute left-4 pointer-events-none" />
                     <input
                       type="text"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       placeholder="John Doe"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-500 text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] focus:border-[#2F80ED] text-[#111827] dark:text-white placeholder-[#9CA3AF] rounded-2xl outline-none transition-all text-sm"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-2">
                     Phone Number
                   </label>
                   <div className="relative flex items-center">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                    <Phone className="w-4 h-4 text-[#9CA3AF] absolute left-4 pointer-events-none" />
                     <input
                       type="tel"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="+1 (555) 000-0000"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-500 text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] focus:border-[#2F80ED] text-[#111827] dark:text-white placeholder-[#9CA3AF] rounded-2xl outline-none transition-all text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                    Email Address <span className="text-slate-400">(Read Only)</span>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-2">
+                    Email Address <span className="text-[#9CA3AF]">(Read Only)</span>
                   </label>
                   <div className="relative flex items-center">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-[#9CA3AF] absolute left-4 pointer-events-none" />
                     <input
                       type="email"
                       value={user?.email || ""}
                       readOnly
                       disabled
-                      className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 text-slate-400 rounded-2xl outline-none text-sm cursor-not-allowed"
+                      className="w-full pl-11 pr-4 py-3 bg-[#E5E7EB] dark:bg-[#374151]/50 border border-[#E5E7EB] dark:border-[#374151] text-[#9CA3AF] rounded-2xl outline-none text-sm cursor-not-allowed"
                     />
                   </div>
                 </div>
               </form>
             </div>
 
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <div className="px-6 py-4 bg-[#F7FAFC] dark:bg-[#1F2937] border-t border-[#E5E7EB] dark:border-[#374151] flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="py-2.5 px-4 rounded-xl font-semibold text-xs text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-100 transition-colors"
+                className="py-2.5 px-4 rounded-xl font-semibold text-xs text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#374151] hover:bg-[#F7FAFC] dark:hover:bg-[#1F2937] transition-colors"
               >
                 Cancel
               </button>
@@ -757,7 +757,7 @@ const Profile = () => {
                 type="submit"
                 form="profile-form"
                 disabled={savingProfile}
-                className="py-2.5 px-6 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="py-2.5 px-6 rounded-xl font-semibold text-xs text-white bg-[#2F80ED] hover:bg-[#2563EB] shadow-md shadow-[#2F80ED]/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {savingProfile ? (
                   <>

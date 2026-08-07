@@ -18,7 +18,9 @@ import {
   X,
   ChevronRight,
   Calculator,
-  LayoutDashboard
+  LayoutDashboard,
+  Sun,
+  Moon
 } from "lucide-react";
 
 const POPULAR_TAGS = [
@@ -66,6 +68,24 @@ const Home = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark" ||
+      (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
   // Dynamic Dashboard route based on user role
   const dashboardPath = user?.role === "Employer" ? "/employer/dashboard" : "/jobseeker/dashboard";
 
@@ -87,15 +107,15 @@ const Home = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#F7FAFC] text-[#111827] selection:bg-[#56CCF2]/30 selection:text-[#111827] overflow-x-hidden font-sans">
+    <div className="relative min-h-screen bg-[#F7FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F3F4F6] selection:bg-[#56CCF2]/30 selection:text-[#111827] dark:selection:text-[#F3F4F6] overflow-x-hidden font-sans transition-colors duration-300">
       
       {/* ========================================================================= */}
-      {/* HOME PAGE DEDICATED HERO NAVBAR                                            */}
+      {/* NAVBAR                                                                   */}
       {/* ========================================================================= */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] shadow-[0_4px_20px_rgb(0,0,0,0.03)] h-[80px]"
+            ? "bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border-b border-[#E5E7EB] dark:border-[#1F2937] shadow-sm h-[80px]"
             : "bg-transparent h-[80px]"
         } flex items-center`}
       >
@@ -106,39 +126,46 @@ const Home = () => {
             <div className="w-10 h-10 rounded-[14px] bg-[#2F80ED] flex items-center justify-center shadow-[0_4px_12px_rgba(47,128,237,0.3)] group-hover:scale-105 transition-transform">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-[20px] font-bold tracking-tight text-[#111827]">
+            <span className="text-[20px] font-bold tracking-tight text-[#111827] dark:text-white">
               Jobnique<span className="text-[#2F80ED]">.</span>
             </span>
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-medium text-[#6B7280]">
-            <Link to="/jobs" className="hover:text-[#2F80ED] transition-colors">
+          <nav className="hidden md:flex items-center gap-8 text-[15px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">
+            <Link to="/jobs" className="hover:text-[#2F80ED] dark:hover:text-[#56CCF2] transition-colors">
               Find Jobs
             </Link>
-            <Link to="/salary" className="hover:text-[#2F80ED] transition-colors flex items-center gap-1.5">
+            <Link to="/salary" className="hover:text-[#2F80ED] dark:hover:text-[#56CCF2] transition-colors flex items-center gap-1.5">
               <Calculator className="w-4 h-4 text-[#9CA3AF]" />
               <span>Salary Calculator</span>
             </Link>
           </nav>
 
-          {/* Right Action CTA Buttons: Dynamically switches based on Authentication Status */}
+          {/* Right Actions & Theme Toggle */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-full bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#2F80ED] dark:hover:text-[#56CCF2] transition-all"
+              aria-label="Toggle Theme"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+            </button>
+
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
-                {/* Logged in User Pill */}
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white border border-[#E5E7EB] shadow-[0_2px_8px_rgb(0,0,0,0.02)]">
-                  <span className="text-[15px] font-semibold text-[#111827]">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] shadow-sm">
+                  <span className="text-[15px] font-semibold text-[#111827] dark:text-white">
                     Hi, {user?.name}
                   </span>
                   {user?.role && (
-                    <span className="text-[11px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-[10px] bg-[#EDF5FF] text-[#2F80ED] border border-[#2F80ED]/20">
+                    <span className="text-[11px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-[10px] bg-[#EDF5FF] dark:bg-[#2F80ED]/20 text-[#2F80ED] dark:text-[#56CCF2] border border-[#2F80ED]/20">
                       {user.role}
                     </span>
                   )}
                 </div>
 
-                {/* Dashboard Button */}
                 <Link
                   to={dashboardPath}
                   className="px-6 py-2.5 text-[15px] font-semibold text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] rounded-full shadow-[0_4px_14px_0_rgba(47,128,237,0.39)] hover:shadow-[0_6px_20px_rgba(47,128,237,0.23)] hover:-translate-y-0.5 transition-all flex items-center gap-2"
@@ -148,11 +175,10 @@ const Home = () => {
                 </Link>
               </div>
             ) : (
-              /* Unauthenticated Auth Buttons */
               <div className="flex items-center gap-4">
                 <Link
                   to="/login"
-                  className="px-6 py-2.5 text-[15px] font-medium text-[#111827] bg-white hover:bg-[#EDF5FF] hover:text-[#2F80ED] border border-[#E5E7EB] rounded-full transition-all shadow-[0_2px_8px_rgb(0,0,0,0.02)]"
+                  className="px-6 py-2.5 text-[15px] font-medium text-[#111827] dark:text-white bg-white dark:bg-[#1F2937] hover:bg-[#EDF5FF] dark:hover:bg-[#374151] border border-[#E5E7EB] dark:border-[#374151] rounded-full transition-all"
                 >
                   Log In
                 </Link>
@@ -166,24 +192,31 @@ const Home = () => {
             )}
           </div>
 
-          {/* Mobile Menu Trigger Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2.5 rounded-[14px] text-[#6B7280] hover:bg-[#EDF5FF] hover:text-[#2F80ED] transition-colors focus:outline-none"
-            aria-label="Toggle Navigation Menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile Menu & Theme Toggle */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] text-[#6B7280] dark:text-[#9CA3AF]"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2.5 rounded-[14px] text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#EDF5FF] dark:hover:bg-[#1F2937] transition-colors focus:outline-none"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-[#E5E7EB] px-6 pt-6 pb-8 space-y-4 absolute top-[80px] left-0 right-0 shadow-[0_20px_40px_rgb(0,0,0,0.1)] animate-fadeIn">
-            <nav className="flex flex-col space-y-2 text-[15px] font-medium text-[#6B7280]">
+          <div className="md:hidden bg-white dark:bg-[#111827] border-b border-[#E5E7EB] dark:border-[#1F2937] px-6 pt-6 pb-8 space-y-4 absolute top-[80px] left-0 right-0 shadow-lg">
+            <nav className="flex flex-col space-y-2 text-[15px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">
               <Link
                 to="/jobs"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-[12px] hover:bg-[#EDF5FF] hover:text-[#2F80ED]"
+                className="flex items-center justify-between p-3 rounded-[12px] hover:bg-[#EDF5FF] dark:hover:bg-[#1F2937] hover:text-[#2F80ED]"
               >
                 <span>Find Jobs</span>
                 <ChevronRight className="w-4 h-4 text-[#9CA3AF]" />
@@ -191,7 +224,7 @@ const Home = () => {
               <Link
                 to="/salary"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-[12px] hover:bg-[#EDF5FF] hover:text-[#2F80ED]"
+                className="flex items-center justify-between p-3 rounded-[12px] hover:bg-[#EDF5FF] dark:hover:bg-[#1F2937] hover:text-[#2F80ED]"
               >
                 <div className="flex items-center gap-2">
                   <Calculator className="w-4 h-4 text-[#9CA3AF]" />
@@ -201,12 +234,12 @@ const Home = () => {
               </Link>
             </nav>
 
-            <div className="pt-4 border-t border-[#E5E7EB] flex flex-col gap-3">
+            <div className="pt-4 border-t border-[#E5E7EB] dark:border-[#1F2937] flex flex-col gap-3">
               {isAuthenticated ? (
                 <Link
                   to={dashboardPath}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-3 text-center text-[15px] font-semibold text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] rounded-full shadow-[0_4px_14px_0_rgba(47,128,237,0.39)] flex items-center justify-center gap-2"
+                  className="w-full py-3 text-center text-[15px] font-semibold text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] rounded-full flex items-center justify-center gap-2"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   <span>Go to Dashboard</span>
@@ -216,14 +249,14 @@ const Home = () => {
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full py-3 text-center text-[15px] font-medium text-[#111827] bg-[#F7FAFC] hover:bg-[#EDF5FF] rounded-full border border-[#E5E7EB]"
+                    className="w-full py-3 text-center text-[15px] font-medium text-[#111827] dark:text-white bg-[#F7FAFC] dark:bg-[#1F2937] rounded-full border border-[#E5E7EB] dark:border-[#374151]"
                   >
                     Log In
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full py-3 text-center text-[15px] font-semibold text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] rounded-full shadow-[0_4px_14px_0_rgba(47,128,237,0.39)]"
+                    className="w-full py-3 text-center text-[15px] font-semibold text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] rounded-full"
                   >
                     Get Started
                   </Link>
@@ -235,27 +268,23 @@ const Home = () => {
       </header>
 
       {/* ========================================================================= */}
-      {/* HERO SECTION                                                              */}
+      {/* HERO SECTION                                                             */}
       {/* ========================================================================= */}
-      <section className="relative z-10 pt-32 pb-20 md:pt-40 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center animate-fadeIn">
-        
-        {/* Release / Status Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EDF5FF] border border-[#2F80ED]/20 text-[#2F80ED] text-[14px] font-medium mb-8 hover:bg-[#EDF5FF]/80 transition-colors cursor-pointer">
+      <section className="relative z-10 pt-32 pb-20 md:pt-40 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#EDF5FF] dark:bg-[#2F80ED]/10 border border-[#2F80ED]/20 text-[#2F80ED] dark:text-[#56CCF2] text-[14px] font-medium mb-8">
           <Sparkles className="w-4 h-4" />
           <span>Next-Gen AI Matching Protocol V2.4 Live</span>
-          <span className="w-2 h-2 rounded-full bg-[#2F80ED] animate-pulse ml-1" />
+          <span className="w-2 h-2 rounded-full bg-[#2F80ED] dark:bg-[#56CCF2] animate-pulse ml-1" />
         </div>
 
-        {/* Main Headline */}
-        <h1 className="max-w-4xl text-[44px] sm:text-[60px] lg:text-[70px] font-extrabold tracking-tight text-[#111827] leading-[1.1] mb-6">
+        <h1 className="max-w-4xl text-[44px] sm:text-[60px] lg:text-[70px] font-extrabold tracking-tight text-[#111827] dark:text-white leading-[1.1] mb-6">
           Find your next career breakthrough with{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2F80ED] to-[#56CCF2]">
             Jobnique
           </span>
         </h1>
 
-        {/* Subtitle */}
-        <p className="max-w-2xl text-[16px] sm:text-[18px] text-[#6B7280] leading-relaxed mb-10">
+        <p className="max-w-2xl text-[16px] sm:text-[18px] text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed mb-10">
           Eliminate noise and endless application queues. Jobnique leverages intelligent semantic parsing to connect top talent with verified global teams instantly.
         </p>
 
@@ -263,7 +292,7 @@ const Home = () => {
         <div className="w-full max-w-3xl mb-8">
           <form 
             onSubmit={handleSearchSubmit}
-            className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-white border border-[#E5E7EB] rounded-full shadow-[0_10px_40px_rgb(0,0,0,0.06)] hover:shadow-[0_15px_50px_rgb(0,0,0,0.1)] focus-within:ring-2 focus-within:ring-[#2F80ED]/40 transition-all duration-300"
+            className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-full shadow-lg transition-all"
           >
             <div className="flex items-center flex-1 w-full px-6 py-2 sm:py-0">
               <Search className="w-5 h-5 text-[#9CA3AF] mr-3 shrink-0" />
@@ -272,12 +301,12 @@ const Home = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Job title, keywords, or technology stack..."
-                className="w-full bg-transparent text-[#111827] placeholder-[#9CA3AF] outline-none text-[16px] h-12"
+                className="w-full bg-transparent text-[#111827] dark:text-white placeholder-[#9CA3AF] outline-none text-[16px] h-12"
               />
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-10 py-4 rounded-full font-semibold text-[16px] text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] shadow-[0_4px_14px_0_rgba(47,128,237,0.39)] hover:shadow-[0_6px_20px_rgba(47,128,237,0.23)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shrink-0"
+              className="w-full sm:w-auto px-10 py-4 rounded-full font-semibold text-[16px] text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 shrink-0"
             >
               <span>Search Jobs</span>
               <ArrowRight className="w-4 h-4" />
@@ -286,13 +315,13 @@ const Home = () => {
 
           {/* Quick Tag Suggestion Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6 text-[14px]">
-            <span className="text-[#6B7280] font-medium mr-1">Popular:</span>
+            <span className="text-[#6B7280] dark:text-[#9CA3AF] font-medium mr-1">Popular:</span>
             {POPULAR_TAGS.map((tag) => (
               <button
                 key={tag}
                 type="button"
                 onClick={() => navigate(`/jobs?search=${encodeURIComponent(tag)}`)}
-                className="px-4 py-2 bg-white border border-[#E5E7EB] text-[#6B7280] rounded-full hover:border-[#2F80ED]/40 hover:text-[#2F80ED] hover:bg-[#EDF5FF]/50 transition-all shadow-[0_2px_8px_rgb(0,0,0,0.02)]"
+                className="px-4 py-2 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#2F80ED] dark:hover:text-[#56CCF2] rounded-full transition-all"
               >
                 {tag}
               </button>
@@ -301,7 +330,7 @@ const Home = () => {
         </div>
 
         {/* Feature Highlights Bar */}
-        <div className="flex flex-wrap justify-center gap-8 sm:gap-12 text-[15px] text-[#6B7280] font-medium pt-8">
+        <div className="flex flex-wrap justify-center gap-8 sm:gap-12 text-[15px] text-[#6B7280] dark:text-[#9CA3AF] font-medium pt-8">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
             <span>Automated Resume Scoring</span>
@@ -318,41 +347,41 @@ const Home = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* METRICS SECTION                                                           */}
+      {/* METRICS SECTION                                                          */}
       {/* ========================================================================= */}
       <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 bg-white border border-[#E5E7EB] rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden divide-y md:divide-y-0 md:divide-x divide-[#E5E7EB]">
+        <div className="grid grid-cols-2 md:grid-cols-4 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-[24px] shadow-sm overflow-hidden divide-y md:divide-y-0 md:divide-x divide-[#E5E7EB] dark:divide-[#1F2937]">
           <div className="p-8 text-center">
-            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] tracking-tight">12k+</p>
-            <p className="text-[15px] text-[#6B7280] mt-1 font-medium">Active Positions</p>
+            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] dark:text-white tracking-tight">12k+</p>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] mt-1 font-medium">Active Positions</p>
           </div>
           <div className="p-8 text-center">
-            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] tracking-tight">3.2x</p>
-            <p className="text-[15px] text-[#6B7280] mt-1 font-medium">Interview Rate</p>
+            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] dark:text-white tracking-tight">3.2x</p>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] mt-1 font-medium">Interview Rate</p>
           </div>
           <div className="p-8 text-center">
-            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] tracking-tight">1.8k+</p>
-            <p className="text-[15px] text-[#6B7280] mt-1 font-medium">Global Companies</p>
+            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] dark:text-white tracking-tight">1.8k+</p>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] mt-1 font-medium">Global Companies</p>
           </div>
           <div className="p-8 text-center">
-            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] tracking-tight">&lt;48h</p>
-            <p className="text-[15px] text-[#6B7280] mt-1 font-medium">Avg. Response Time</p>
+            <p className="text-[36px] sm:text-[42px] font-bold text-[#111827] dark:text-white tracking-tight">&lt;48h</p>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] mt-1 font-medium">Avg. Response Time</p>
           </div>
         </div>
       </section>
 
       {/* ========================================================================= */}
-      {/* FEATURED JOBS SECTION                                                     */}
+      {/* FEATURED JOBS SECTION                                                    */}
       {/* ========================================================================= */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
-            <h2 className="text-[14px] font-semibold uppercase tracking-wider text-[#2F80ED] mb-2">Curated Opportunities</h2>
-            <p className="text-[32px] sm:text-[36px] font-bold text-[#111827] tracking-tight">Featured High-Match Positions</p>
+            <h2 className="text-[14px] font-semibold uppercase tracking-wider text-[#2F80ED] dark:text-[#56CCF2] mb-2">Curated Opportunities</h2>
+            <p className="text-[32px] sm:text-[36px] font-bold text-[#111827] dark:text-white tracking-tight">Featured High-Match Positions</p>
           </div>
           <Link
             to="/jobs"
-            className="inline-flex items-center gap-2 text-[16px] font-medium text-[#2F80ED] hover:text-[#2563EB] transition-colors group"
+            className="inline-flex items-center gap-2 text-[16px] font-medium text-[#2F80ED] dark:text-[#56CCF2] hover:underline transition-colors group"
           >
             <span>Explore all listings</span>
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -363,21 +392,21 @@ const Home = () => {
           {FEATURED_JOBS_PREVIEW.map((job) => (
             <div
               key={job.id}
-              className="p-8 bg-white border border-[#E5E7EB] rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1 hover:border-[#2F80ED]/30 transition-all duration-300 flex flex-col justify-between group"
+              className="p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-[24px] shadow-sm hover:border-[#2F80ED]/40 transition-all flex flex-col justify-between group"
             >
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <span className="px-3 py-1 bg-[#22C55E]/10 text-[#22C55E] rounded-full text-[13px] font-semibold">
                     {job.match}
                   </span>
-                  <span className="text-[14px] font-medium text-[#6B7280]">{job.type}</span>
+                  <span className="text-[14px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">{job.type}</span>
                 </div>
-                <h3 className="text-[20px] font-bold text-[#111827] group-hover:text-[#2F80ED] transition-colors mb-1 tracking-tight">
+                <h3 className="text-[20px] font-bold text-[#111827] dark:text-white group-hover:text-[#2F80ED] dark:group-hover:text-[#56CCF2] transition-colors mb-1 tracking-tight">
                   {job.title}
                 </h3>
-                <p className="text-[15px] text-[#6B7280] mb-6">{job.company}</p>
+                <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] mb-6">{job.company}</p>
 
-                <div className="space-y-3 mb-6 text-[15px] text-[#6B7280]">
+                <div className="space-y-3 mb-6 text-[15px] text-[#6B7280] dark:text-[#9CA3AF]">
                   <div className="flex items-center gap-3">
                     <MapPin className="w-4 h-4 text-[#9CA3AF]" />
                     <span>{job.location}</span>
@@ -390,7 +419,7 @@ const Home = () => {
 
                 <div className="flex flex-wrap gap-2.5 mb-8">
                   {job.tags.map((t) => (
-                    <span key={t} className="px-3 py-1 bg-[#F7FAFC] border border-[#E5E7EB] text-[#6B7280] text-[13px] font-medium rounded-[10px]">
+                    <span key={t} className="px-3 py-1 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] text-[#6B7280] dark:text-[#9CA3AF] text-[13px] font-medium rounded-[10px]">
                       {t}
                     </span>
                   ))}
@@ -399,7 +428,7 @@ const Home = () => {
 
               <Link
                 to="/jobs"
-                className="w-full py-3.5 bg-[#EDF5FF] hover:bg-[#2F80ED] text-[#2F80ED] hover:text-white rounded-[16px] text-[15px] font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_2px_10px_rgb(0,0,0,0.02)]"
+                className="w-full py-3.5 bg-[#EDF5FF] dark:bg-[#1F2937] hover:bg-[#2F80ED] text-[#2F80ED] dark:text-[#56CCF2] hover:text-white dark:hover:text-white rounded-[16px] text-[15px] font-semibold transition-all flex items-center justify-center gap-2"
               >
                 <span>View Listing</span>
                 <ArrowUpRight className="w-4 h-4" />
@@ -410,41 +439,41 @@ const Home = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* WORKFLOW CARDS SECTION                                                    */}
+      {/* WORKFLOW CARDS SECTION                                                   */}
       {/* ========================================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 border-t border-[#E5E7EB]">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 border-t border-[#E5E7EB] dark:border-[#1F2937]">
         <div className="text-center mb-16">
-          <h2 className="text-[14px] font-semibold uppercase tracking-wider text-[#2F80ED] mb-2">The Jobnique Advantage</h2>
-          <p className="text-[32px] sm:text-[36px] font-bold text-[#111827] tracking-tight">Engineered for modern candidates</p>
+          <h2 className="text-[14px] font-semibold uppercase tracking-wider text-[#2F80ED] dark:text-[#56CCF2] mb-2">The Jobnique Advantage</h2>
+          <p className="text-[32px] sm:text-[36px] font-bold text-[#111827] dark:text-white tracking-tight">Engineered for modern candidates</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 bg-white border border-[#E5E7EB] rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center text-center group hover:border-[#2F80ED]/30 transition-all">
-            <div className="w-16 h-16 bg-[#EDF5FF] rounded-[20px] flex items-center justify-center text-[#2F80ED] mb-6 group-hover:scale-110 transition-transform shadow-[0_4px_14px_rgba(47,128,237,0.15)]">
+          <div className="p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-[24px] shadow-sm flex flex-col items-center text-center group hover:border-[#2F80ED]/30 transition-all">
+            <div className="w-16 h-16 bg-[#EDF5FF] dark:bg-[#1F2937] rounded-[20px] flex items-center justify-center text-[#2F80ED] dark:text-[#56CCF2] mb-6 group-hover:scale-110 transition-transform">
               <BrainCircuit className="w-8 h-8" />
             </div>
-            <h3 className="text-[20px] font-bold text-[#111827] mb-3 tracking-tight">Smart Semantic Matching</h3>
-            <p className="text-[15px] text-[#6B7280] leading-relaxed">
+            <h3 className="text-[20px] font-bold text-[#111827] dark:text-white mb-3 tracking-tight">Smart Semantic Matching</h3>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
               Our neural models parse experience vectors rather than exact keyword matches, revealing opportunities that align with true capabilities.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-[#E5E7EB] rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center text-center group hover:border-[#2F80ED]/30 transition-all">
-            <div className="w-16 h-16 bg-[#EDF5FF] rounded-[20px] flex items-center justify-center text-[#2F80ED] mb-6 group-hover:scale-110 transition-transform shadow-[0_4px_14px_rgba(47,128,237,0.15)]">
+          <div className="p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-[24px] shadow-sm flex flex-col items-center text-center group hover:border-[#2F80ED]/30 transition-all">
+            <div className="w-16 h-16 bg-[#EDF5FF] dark:bg-[#1F2937] rounded-[20px] flex items-center justify-center text-[#2F80ED] dark:text-[#56CCF2] mb-6 group-hover:scale-110 transition-transform">
               <Zap className="w-8 h-8" />
             </div>
-            <h3 className="text-[20px] font-bold text-[#111827] mb-3 tracking-tight">Automated Cover Notes</h3>
-            <p className="text-[15px] text-[#6B7280] leading-relaxed">
+            <h3 className="text-[20px] font-bold text-[#111827] dark:text-white mb-3 tracking-tight">Automated Cover Notes</h3>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
               Generate job-tailored summary points with one click, highlighting exact skill overlaps that catch hiring managers' attention.
             </p>
           </div>
 
-          <div className="p-8 bg-white border border-[#E5E7EB] rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center text-center group hover:border-[#2F80ED]/30 transition-all">
-            <div className="w-16 h-16 bg-[#EDF5FF] rounded-[20px] flex items-center justify-center text-[#2F80ED] mb-6 group-hover:scale-110 transition-transform shadow-[0_4px_14px_rgba(47,128,237,0.15)]">
+          <div className="p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-[24px] shadow-sm flex flex-col items-center text-center group hover:border-[#2F80ED]/30 transition-all">
+            <div className="w-16 h-16 bg-[#EDF5FF] dark:bg-[#1F2937] rounded-[20px] flex items-center justify-center text-[#2F80ED] dark:text-[#56CCF2] mb-6 group-hover:scale-110 transition-transform">
               <Building2 className="w-8 h-8" />
             </div>
-            <h3 className="text-[20px] font-bold text-[#111827] mb-3 tracking-tight">Verified Compensation</h3>
-            <p className="text-[15px] text-[#6B7280] leading-relaxed">
+            <h3 className="text-[20px] font-bold text-[#111827] dark:text-white mb-3 tracking-tight">Verified Compensation</h3>
+            <p className="text-[15px] text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
               No guesswork. View transparent salary bands, equity packages, and workplace configurations prior to submitting your profile.
             </p>
           </div>
@@ -452,30 +481,30 @@ const Home = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* CTA BANNER SECTION                                                        */}
+      {/* CTA BANNER SECTION                                                       */}
       {/* ========================================================================= */}
       <section className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <div className="relative overflow-hidden p-10 sm:p-14 bg-white border border-[#E5E7EB] rounded-[32px] shadow-[0_20px_60px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative overflow-hidden p-10 sm:p-14 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-[32px] shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#2F80ED] to-[#56CCF2]" />
           
           <div className="max-w-xl text-center md:text-left relative z-10">
-            <h3 className="text-[28px] sm:text-[34px] font-bold text-[#111827] mb-3 tracking-tight">
+            <h3 className="text-[28px] sm:text-[34px] font-bold text-[#111827] dark:text-white mb-3 tracking-tight">
               Ready to upgrade your recruitment experience?
             </h3>
-            <p className="text-[16px] text-[#6B7280] leading-relaxed">
+            <p className="text-[16px] text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
               Create an account in less than two minutes to unlock tailored recommendations, instant application tracking, and direct employer updates.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto shrink-0 relative z-10">
             <Link
               to={isAuthenticated ? dashboardPath : "/register"}
-              className="px-8 py-4 bg-gradient-to-r from-[#2F80ED] to-[#2563EB] hover:opacity-95 text-white rounded-full text-[16px] font-semibold transition-all text-center shadow-[0_4px_14px_0_rgba(47,128,237,0.39)] active:scale-[0.98]"
+              className="px-8 py-4 bg-gradient-to-r from-[#2F80ED] to-[#2563EB] hover:opacity-95 text-white rounded-full text-[16px] font-semibold transition-all text-center shadow-md"
             >
               {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
             </Link>
             <Link
               to="/jobs"
-              className="px-8 py-4 bg-[#F7FAFC] hover:bg-[#EDF5FF] text-[#111827] hover:text-[#2F80ED] rounded-full text-[16px] font-semibold transition-all text-center border border-[#E5E7EB] active:scale-[0.98]"
+              className="px-8 py-4 bg-[#F7FAFC] dark:bg-[#1F2937] hover:bg-[#EDF5FF] dark:hover:bg-[#374151] text-[#111827] dark:text-white hover:text-[#2F80ED] dark:hover:text-[#56CCF2] rounded-full text-[16px] font-semibold transition-all text-center border border-[#E5E7EB] dark:border-[#374151]"
             >
               Browse Jobs First
             </Link>

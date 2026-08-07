@@ -79,7 +79,7 @@ const PostJob = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#F4F7FB] text-slate-800 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="relative min-h-screen bg-[#F4F7FB] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
       
       <div className="relative z-10 max-w-3xl mx-auto space-y-8">
         
@@ -87,7 +87,7 @@ const PostJob = () => {
         <div>
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#2F80ED] transition-colors mb-4 group"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#2F80ED] dark:hover:text-[#2F80ED] transition-colors mb-4 group"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <span>Back to Dashboard</span>
@@ -95,28 +95,28 @@ const PostJob = () => {
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-[#2F80ED] text-xs font-semibold mb-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/50 text-[#2F80ED] text-xs font-semibold mb-3">
                 <Sparkles className="w-3.5 h-3.5 text-[#2F80ED]" />
                 <span>Employer Hiring Hub</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Publish a New Role
               </h1>
             </div>
-            <p className="text-xs text-slate-500 max-w-xs">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
               Reach thousands of verified software engineers, designers, and tech professionals instantly.
             </p>
           </div>
         </div>
 
         {/* Form Container */}
-        <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm relative overflow-hidden">
+        <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm relative overflow-hidden transition-colors">
           
           {/* Error Display */}
           {error && (
-            <div className="p-4 mb-6 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-xs sm:text-sm text-red-700 font-medium leading-relaxed">
+            <div className="p-4 mb-6 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-800/60 rounded-2xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 font-medium leading-relaxed">
                 {error}
               </p>
             </div>
@@ -126,18 +126,18 @@ const PostJob = () => {
             
             {/* Job Title */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                 Job Title <span className="text-[#2F80ED]">*</span>
               </label>
               <div className="relative flex items-center">
-                <Briefcase className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                 <input
                   type="text"
                   name="title"
                   value={form.title}
                   onChange={handleChange}
                   placeholder="e.g. Senior Full Stack Engineer (React & Node)"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                   required
                 />
               </div>
@@ -145,18 +145,18 @@ const PostJob = () => {
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                 Job Description <span className="text-[#2F80ED]">*</span>
               </label>
               <div className="relative">
-                <FileText className="w-4 h-4 text-slate-400 absolute left-4 top-3.5 pointer-events-none" />
+                <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 top-3.5 pointer-events-none" />
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={handleChange}
                   rows={5}
                   placeholder="Outline core responsibilities, tech stack requirements, team structure, and perks..."
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm leading-relaxed resize-y min-h-[120px]"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm leading-relaxed resize-y min-h-[120px]"
                   required
                 />
               </div>
@@ -165,20 +165,20 @@ const PostJob = () => {
             {/* Category & Specific Location Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Category <span className="text-[#2F80ED]">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <Tag className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none z-10" />
+                  <Tag className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none z-10" />
                   <select
                     name="category"
                     value={form.category}
                     onChange={handleChange}
-                    className="w-full pl-11 pr-8 py-3 bg-slate-50 border border-slate-200 focus:border-[#2F80ED] text-slate-800 rounded-2xl outline-none transition-all text-sm cursor-pointer"
+                    className="w-full pl-11 pr-8 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 rounded-2xl outline-none transition-all text-sm cursor-pointer"
                     required
                   >
                     {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
+                      <option key={cat} value={cat} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">
                         {cat}
                       </option>
                     ))}
@@ -187,18 +187,18 @@ const PostJob = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Worksite / Location Type
                 </label>
                 <div className="relative flex items-center">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                  <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                   <input
                     type="text"
                     name="location"
                     value={form.location}
                     onChange={handleChange}
                     placeholder="e.g. Remote, Hybrid, or On-site"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                   />
                 </div>
               </div>
@@ -207,36 +207,36 @@ const PostJob = () => {
             {/* Country & City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Country <span className="text-[#2F80ED]">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <Globe className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                  <Globe className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                   <input
                     type="text"
                     name="country"
                     value={form.country}
                     onChange={handleChange}
                     placeholder="e.g. India"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   City <span className="text-[#2F80ED]">*</span>
                 </label>
                 <div className="relative flex items-center">
-                  <Building2 className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                  <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                   <input
                     type="text"
                     name="city"
                     value={form.city}
                     onChange={handleChange}
                     placeholder="e.g. Bengaluru"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                     required
                   />
                 </div>
@@ -244,21 +244,21 @@ const PostJob = () => {
             </div>
 
             {/* Salary Setup Block */}
-            <div className="p-4 sm:p-5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-4">
+            <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Salary Structure <span className="text-[#2F80ED]">*</span>
                 </label>
                 
                 {/* Salary Switcher Tabs */}
-                <div className="inline-flex p-1 bg-white border border-slate-200 rounded-xl">
+                <div className="inline-flex p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, salaryType: "fixed" })}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       form.salaryType === "fixed"
                         ? "bg-[#2F80ED] text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-800"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     Fixed Salary
@@ -269,7 +269,7 @@ const PostJob = () => {
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       form.salaryType === "range"
                         ? "bg-[#2F80ED] text-white shadow-sm"
-                        : "text-slate-500 hover:text-slate-800"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     Salary Range
@@ -281,48 +281,48 @@ const PostJob = () => {
               {form.salaryType === "fixed" ? (
                 <div>
                   <div className="relative flex items-center">
-                    <IndianRupee className="w-4 h-4 text-emerald-600 absolute left-4 pointer-events-none" />
+                    <IndianRupee className="w-4 h-4 text-emerald-600 dark:text-emerald-400 absolute left-4 pointer-events-none" />
                     <input
                       type="number"
                       name="fixedSalary"
                       value={form.fixedSalary}
                       onChange={handleChange}
                       placeholder="e.g. 1200000"
-                      className="w-full pl-11 pr-16 py-3 bg-white border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                      className="w-full pl-11 pr-16 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                       required
                     />
-                    <span className="absolute right-4 text-xs font-semibold text-slate-400">INR / yr</span>
+                    <span className="absolute right-4 text-xs font-semibold text-slate-400 dark:text-slate-500">INR / yr</span>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-1.5">Minimum Annual (₹)</label>
+                    <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">Minimum Annual (₹)</label>
                     <div className="relative flex items-center">
-                      <IndianRupee className="w-4 h-4 text-emerald-600 absolute left-4 pointer-events-none" />
+                      <IndianRupee className="w-4 h-4 text-emerald-600 dark:text-emerald-400 absolute left-4 pointer-events-none" />
                       <input
                         type="number"
                         name="salaryFrom"
                         value={form.salaryFrom}
                         onChange={handleChange}
                         placeholder="e.g. 800000"
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-1.5">Maximum Annual (₹)</label>
+                    <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">Maximum Annual (₹)</label>
                     <div className="relative flex items-center">
-                      <IndianRupee className="w-4 h-4 text-emerald-600 absolute left-4 pointer-events-none" />
+                      <IndianRupee className="w-4 h-4 text-emerald-600 dark:text-emerald-400 absolute left-4 pointer-events-none" />
                       <input
                         type="number"
                         name="salaryTo"
                         value={form.salaryTo}
                         onChange={handleChange}
                         placeholder="e.g. 1600000"
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 focus:border-[#2F80ED] text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                        className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-[#2F80ED] dark:focus:border-[#2F80ED] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                         required
                       />
                     </div>
@@ -353,8 +353,8 @@ const PostJob = () => {
         </div>
 
         {/* Verification Footer Note */}
-        <div className="flex items-center justify-center gap-2 mt-6 text-xs text-slate-500">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        <div className="flex items-center justify-center gap-2 mt-6 text-xs text-slate-500 dark:text-slate-400">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           <span>Postings are instantly indexed across AI job match feeds</span>
         </div>
 

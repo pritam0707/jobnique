@@ -79,71 +79,71 @@ const Profile = () => {
   const isEmployer = user?.role === "Employer";
 
   return (
-    <div className="relative min-h-screen bg-[#F4F7FB] text-slate-800 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="relative min-h-screen bg-[#F4F7FB] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
       <div className="relative z-10 max-w-4xl mx-auto space-y-8">
         
         {/* Profile Banner */}
-        <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+        <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden transition-colors">
           <div className="w-20 h-20 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-3xl shadow-lg shadow-blue-500/20 shrink-0">
             {user?.name ? user.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />}
           </div>
 
           <div className="text-center sm:text-left flex-1">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold mb-2">
-              <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-2">
+              <BadgeCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>{user?.role || "Verified Account"}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               {user?.name || "Account Profile"}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 flex items-center justify-center sm:justify-start gap-2">
-              <Mail className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-center sm:justify-start gap-2">
+              <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
               <span>{user?.email}</span>
             </p>
           </div>
         </div>
 
         {/* Profile Details Card */}
-        <div className="p-6 sm:p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between">
+        <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm flex flex-col justify-between transition-colors">
           <div>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
                   {isEmployer ? <Building2 className="w-5 h-5" /> : <User className="w-5 h-5" />}
                 </div>
-                <h2 className="text-lg font-bold text-slate-900">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {isEmployer ? "Employer & Company Details" : "Personal Details"}
                 </h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                   Full Name
                 </span>
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                  <User className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+                  <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   {user?.name || "Not provided"}
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                   Phone Number
                 </span>
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                  <Phone className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+                  <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   {user?.phone || "Not provided"}
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                   Email Address
                 </span>
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-800 truncate">
-                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                  <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                   <span className="truncate">{user?.email}</span>
                 </div>
               </div>
@@ -151,22 +151,22 @@ const Profile = () => {
               {/* Employer Specific Fields */}
               {isEmployer && (
                 <>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                       Company Name
                     </span>
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                      <Building2 className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+                      <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                       {user?.companyName || "Not provided"}
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
                       Designation
                     </span>
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                      <Briefcase className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
+                      <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                       {user?.designation || "Not provided"}
                     </div>
                   </div>
@@ -177,7 +177,7 @@ const Profile = () => {
 
           <button
             onClick={() => setIsEditModalOpen(true)}
-            className="w-full mt-6 py-3 px-5 rounded-2xl font-semibold text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full mt-6 py-3 px-5 rounded-2xl font-semibold text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-100 dark:border-blue-900/50 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <Edit className="w-4 h-4" />
             <span>Edit Details</span>
@@ -187,18 +187,18 @@ const Profile = () => {
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white border border-slate-100 rounded-3xl shadow-xl overflow-hidden relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden relative transition-colors">
             
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Edit className="w-5 h-5 text-blue-600" />
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 Edit Details
               </h3>
               <button 
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -207,49 +207,49 @@ const Profile = () => {
             {/* Modal Body */}
             <div className="p-6">
               {profileMsg && (
-                <div className="p-3.5 mb-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <p className="text-xs text-emerald-700 font-medium">{profileMsg}</p>
+                <div className="p-3.5 mb-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">{profileMsg}</p>
                 </div>
               )}
 
               {profileErr && (
-                <div className="p-3.5 mb-5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <p className="text-xs text-red-700 font-medium">{profileErr}</p>
+                <div className="p-3.5 mb-5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl flex items-center gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
+                  <p className="text-xs text-red-700 dark:text-red-300 font-medium">{profileErr}</p>
                 </div>
               )}
 
               <form id="profile-form" onSubmit={handleProfileSave} className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Full Name
                   </label>
                   <div className="relative flex items-center">
-                    <User className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                    <User className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                     <input
                       type="text"
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       placeholder="John Doe"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-500 text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                     Phone Number
                   </label>
                   <div className="relative flex items-center">
-                    <Phone className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                    <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                     <input
                       type="tel"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="+91 98765 43210"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-500 text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                     />
                   </div>
                 </div>
@@ -258,33 +258,33 @@ const Profile = () => {
                 {isEmployer && (
                   <>
                     <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                         Company Name
                       </label>
                       <div className="relative flex items-center">
-                        <Building2 className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                        <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                         <input
                           type="text"
                           value={form.companyName}
                           onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                           placeholder="Acme Corp"
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-500 text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                      <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                         Designation
                       </label>
                       <div className="relative flex items-center">
-                        <Briefcase className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                        <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                         <input
                           type="text"
                           value={form.designation}
                           onChange={(e) => setForm({ ...form, designation: e.target.value })}
                           placeholder="Hiring Manager / HR"
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 focus:border-blue-500 text-slate-800 placeholder-slate-400 rounded-2xl outline-none transition-all text-sm"
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                         />
                       </div>
                     </div>
@@ -292,17 +292,17 @@ const Profile = () => {
                 )}
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                    Email Address <span className="text-slate-400">(Read Only)</span>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    Email Address <span className="text-slate-400 dark:text-slate-500">(Read Only)</span>
                   </label>
                   <div className="relative flex items-center">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                     <input
                       type="email"
                       value={user?.email || ""}
                       readOnly
                       disabled
-                      className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 text-slate-400 rounded-2xl outline-none text-sm cursor-not-allowed"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl outline-none text-sm cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -310,11 +310,11 @@ const Profile = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="py-2.5 px-4 rounded-xl font-semibold text-xs text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-100 transition-colors"
+                className="py-2.5 px-4 rounded-xl font-semibold text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
               >
                 Cancel
               </button>
@@ -322,7 +322,7 @@ const Profile = () => {
                 type="submit"
                 form="profile-form"
                 disabled={savingProfile}
-                className="py-2.5 px-6 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="py-2.5 px-6 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {savingProfile ? (
                   <>

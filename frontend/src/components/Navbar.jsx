@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import api from "../api/axios";
 import { logoutUser } from "../store/slices/authSlice";
-import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "../context/ThemeContext"; // Import from context directly
 import { 
   Briefcase, 
   PlusCircle, 
@@ -16,32 +16,31 @@ import {
   X, 
   Sparkles, 
   Calculator,
-  Layers
+  Layers,
+  Sun,
+  Moon
 } from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isDarkMode, toggleTheme } = useTheme() || {};
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [postedJobsCount, setPostedJobsCount] = useState(0);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // Hide the global navbar when the user is on the Home page ("/")
-  if (location.pathname === "/") {
-    return null;
-  }
-
-  // Check role safely regardless of uppercase/lowercase backend response
+  // Safely check role regardless of backend case sensitivity
   const isEmployer = user?.role?.toLowerCase() === "employer";
 
   // Role-based route paths
   const dashboardPath = isEmployer ? "/employer/dashboard" : "/jobseeker/dashboard";
   const profilePath = isEmployer ? "/employer/profile" : "/jobseeker/profile";
 
-  // Fetch count of jobs posted by the employer
+  // MUST be called before any early return!
   useEffect(() => {
-    if (isAuthenticated && isEmployer) {
+    if (isAuthenticated && isEmployer && location.pathname !== "/") {
       const fetchJobsCount = async () => {
         try {
           const res = await api.get("/jobs/employer/my-jobs");
@@ -63,6 +62,11 @@ const Navbar = () => {
   };
 
   const closeMenu = () => setMobileMenuOpen(false);
+
+  // ✅ EARLY RETURN PLACED AT THE BOTTOM AFTER ALL HOOKS
+  if (location.pathname === "/") {
+    return null;
+  }
 
   const desktopLinkClass = "px-4 py-2 rounded-full text-[15px] font-medium text-[#6B7280] dark:text-slate-300 hover:bg-[#EDF5FF] dark:hover:bg-slate-800 hover:text-[#2F80ED] dark:hover:text-blue-400 transition-all flex items-center gap-2";
 
@@ -87,7 +91,6 @@ const Navbar = () => {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1.5 lg:gap-2">
-            {/* Show Jobs & Salary Calculator ONLY when NOT an Employer */}
             {!isEmployer && (
               <>
                 <Link to="/jobs" className={desktopLinkClass}>
@@ -102,7 +105,6 @@ const Navbar = () => {
               </>
             )}
 
-            {/* Post Job + Jobs Count Badge for Employer */}
             {isAuthenticated && isEmployer && (
               <div className="flex items-center gap-2">
                 <Link to="/post-job" className={desktopLinkClass}>
@@ -110,7 +112,6 @@ const Navbar = () => {
                   <span>Post Job</span>
                 </Link>
 
-                {/* Badge Component showing number of jobs added */}
                 <div
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDF5FF] dark:bg-slate-800 border border-[#2F80ED]/20 text-[#2F80ED] dark:text-blue-400 text-[12px] font-bold tracking-tight shadow-sm"
                   title="Total jobs posted by you"
@@ -121,7 +122,6 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Dashboard & Profile for Logged-In Users */}
             {isAuthenticated && (
               <>
                 <Link to={dashboardPath} className={desktopLinkClass}>
@@ -139,9 +139,17 @@ const Navbar = () => {
 
           {/* Desktop User / Auth Actions */}
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
-            
-            {/* Dark / Light Theme Toggle Button */}
-            <ThemeToggle />
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-full bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 text-[#6B7280] dark:text-slate-300 hover:text-[#2F80ED] dark:hover:text-blue-400 transition-all shadow-sm"
+              aria-label="Toggle Theme"
+            >
+              {isDarkMode ? (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Moon className="w-5 h-5 text-slate-700" />
+              )}
+            </button>
 
             {isAuthenticated ? (
               <div className="flex items-center gap-3 lg:gap-4">
@@ -183,13 +191,20 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Actions Header */}
+          {/* Mobile Menu Actions */}
           <div className="flex md:hidden items-center gap-2">
-            
-            {/* Theme Toggle for Mobile */}
-            <ThemeToggle />
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full bg-white dark:bg-slate-800 border border-[#E5E7EB] dark:border-slate-700 text-[#6B7280] dark:text-slate-300"
+              aria-label="Toggle Theme"
+            >
+              {isDarkMode ? (
+                <Sun className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Moon className="w-5 h-5 text-slate-700" />
+              )}
+            </button>
 
-            {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2.5 rounded-[14px] text-[#6B7280] dark:text-slate-300 hover:bg-[#EDF5FF] dark:hover:bg-slate-800 hover:text-[#2F80ED] dark:hover:text-blue-400 transition-colors focus:outline-none"
@@ -202,7 +217,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-[#E5E7EB] dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_20px_40px_rgb(0,0,0,0.1)] absolute top-[80px] w-full animate-fadeIn">
           <div className="px-6 pt-6 pb-8 space-y-3">
