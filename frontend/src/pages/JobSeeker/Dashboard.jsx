@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
 import { fetchCurrentUser } from "../../store/slices/authSlice";
 import { 
@@ -442,7 +442,19 @@ const Dashboard = () => {
   };
 
   const isEmployer = user?.role === "Employer";
-  const [activeView, setActiveView] = useState("overview");
+
+  // URL Query Parameters state for persisting active view
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeView = searchParams.get("view") || "overview";
+
+  const setActiveView = (view) => {
+    if (view === "overview") {
+      searchParams.delete("view");
+      setSearchParams(searchParams);
+    } else {
+      setSearchParams({ view });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -555,7 +567,7 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {/* 2. Resume Upload & AI Analysis Card (Replaces Skills) */}
+                  {/* 2. Resume Upload & AI Analysis Card */}
                   <div 
                     onClick={() => setActiveView("resume-analyzer")}
                     className="group relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all duration-300 ease-out cursor-pointer flex flex-col justify-between space-y-6 transform hover:-translate-y-2 hover:rotate-1 hover:skew-x-1"

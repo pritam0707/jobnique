@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../../api/axios";
-import { fetchCurrentUser } from "../../store/slices/authSlice";
+import { toggleSaveJob } from "../../store/slices/authSlice";
 import {
   Search,
   MapPin,
@@ -67,21 +67,48 @@ const Jobs = () => {
     }
   }, [searchTerm, setSearchParams]);
 
-  const toggleSaveJob = async (e, id) => {
+  // Uses Redux thunk to toggle save status seamlessly
+  const handleToggleSaveJob = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      alert("Please login to save jobs.");
+      return;
+    }
+
     try {
-      await api.post(`/jobs/save/${id}`);
-      dispatch(fetchCurrentUser());
+      await dispatch(toggleSaveJob(id)).unwrap();
     } catch (err) {
       console.error("Failed to save/unsave job:", err);
     }
   };
 
+  // Robust string-safe check for raw IDs or populated object models
   const isJobSaved = (jobId) => {
-    return user?.savedJobs?.some(
-      (saved) => (saved._id || saved.id || saved) === jobId
-    );
+    if (!user || !user.savedJobs) return false;
+
+    // Handles arrays whether they contain IDs ["1","2"] or populated objects [{id: "1"}]
+    let savedList = user.savedJobs;
+    if (typeof savedList === "string") {
+      try {
+        savedList = JSON.parse(savedList);
+      } catch (e) {
+        savedList = savedList.split(",");
+      }
+    }
+
+    if (!Array.isArray(savedList)) return false;
+
+    return savedList.some((saved) => {
+      let savedId = "";
+      if (typeof saved === "object" && saved !== null) {
+        savedId = String(saved.id || saved._id || "").trim();
+      } else {
+        savedId = String(saved).trim();
+      }
+      return savedId.replace(/^["']|["']$/g, "") === String(jobId).replace(/^["']|["']$/g, "").trim();
+    });
   };
 
   // Safe Filtering Logic with optional chaining and fallback strings
@@ -256,15 +283,15 @@ const Jobs = () => {
                         </div>
                       </div>
 
-                      {/* Save Job Button */}
+                      {/* Save/Unsave Job Button */}
                       <button
-                        onClick={(e) => toggleSaveJob(e, jobId)}
+                        onClick={(e) => handleToggleSaveJob(e, jobId)}
                         className={`p-2 rounded-xl border text-sm transition-all focus:outline-none ${
                           saved
                             ? "bg-[#EDF5FF] dark:bg-[#2F80ED]/20 border-[#2F80ED]/30 text-[#2F80ED] dark:text-[#56CCF2]"
                             : "bg-transparent border-transparent text-[#9CA3AF] hover:bg-[#F7FAFC] dark:hover:bg-[#1F2937] hover:text-[#111827] dark:hover:text-white"
                         }`}
-                        aria-label="Save Job"
+                        aria-label={saved ? "Unsave Job" : "Save Job"}
                       >
                         <Bookmark className={`w-4 h-4 ${saved ? "fill-current" : ""}`} />
                       </button>
@@ -286,7 +313,6 @@ const Jobs = () => {
                         <span>{job.city && job.country ? `${job.city}, ${job.country}` : "Remote"}</span>
                       </div>
 
-                      {/* Updated Salary Display to Rupee */}
                       <div className="flex items-center gap-1 text-[#22C55E] font-semibold">
                         <IndianRupee className="w-4 h-4" />
                         <span>

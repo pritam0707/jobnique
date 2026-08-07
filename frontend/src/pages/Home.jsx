@@ -518,19 +518,31 @@ const Home = () => {
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">For JobSeeker</h4>
               <ul className="space-y-2.5 text-xs">
                 <li>
-                  <Link to="/login" className="hover:text-indigo-400 transition-colors">
-                    Browse Jobs
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="text-slate-600 cursor-not-allowed select-none">Browse Jobs</span>
+                  ) : (
+                    <Link to="/jobs" className="hover:text-indigo-400 transition-colors">
+                      Browse Jobs
+                    </Link>
+                  )}
                 </li>
                 <li>
-                  <Link to="/login" className="hover:text-indigo-400 transition-colors">
-                    Browse Categories
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="text-slate-600 cursor-not-allowed select-none">Browse Categories</span>
+                  ) : (
+                    <Link to="/categories" className="hover:text-indigo-400 transition-colors">
+                      Browse Categories
+                    </Link>
+                  )}
                 </li>
                 <li>
-                  <Link to="/login" className="hover:text-indigo-400 transition-colors">
-                    Candidate Dashboard
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="text-slate-600 cursor-not-allowed select-none">Candidate Dashboard</span>
+                  ) : (
+                    <Link to="/jobseeker/dashboard" className="hover:text-indigo-400 transition-colors">
+                      Candidate Dashboard
+                    </Link>
+                  )}
                 </li>
               </ul>
             </div>
@@ -540,24 +552,36 @@ const Home = () => {
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">For Employers</h4>
               <ul className="space-y-2.5 text-xs">
                 <li>
-                  <Link to="/login" className="hover:text-indigo-400 transition-colors">
-                    Post a Job
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="text-slate-600 cursor-not-allowed select-none">Post a Job</span>
+                  ) : (
+                    <Link to="/post-job" className="hover:text-indigo-400 transition-colors">
+                      Post a Job
+                    </Link>
+                  )}
                 </li>
                 <li>
-                  <Link to="/login" className="hover:text-indigo-400 transition-colors">
-                    Pricing Plans
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="text-slate-600 cursor-not-allowed select-none">Pricing Plans</span>
+                  ) : (
+                    <Link to="/pricing" className="hover:text-indigo-400 transition-colors">
+                      Pricing Plans
+                    </Link>
+                  )}
                 </li>
                 <li>
-                  <Link to="/login" className="hover:text-indigo-400 transition-colors">
-                    Employer Resources
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="text-slate-600 cursor-not-allowed select-none">Employer Resources</span>
+                  ) : (
+                    <Link to="/employer-resources" className="hover:text-indigo-400 transition-colors">
+                      Employer Resources
+                    </Link>
+                  )}
                 </li>
               </ul>
             </div>
 
-            {/* Support & Company */}
+            {/* Support & Company - Always active */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">Support & Company</h4>
               <ul className="space-y-2.5 text-xs">

@@ -4,6 +4,38 @@ const pdfParse = require("pdf-parse");
 const { User, Job } = require("../models");
 const sendToken = require("../utils/sendToken");
 
+// Helper function to safely parse savedJobIds and fetch populated Job objects
+const getPopulatedSavedJobs = async (userSavedJobs) => {
+  let savedJobIds = userSavedJobs || [];
+
+  if (typeof savedJobIds === "string") {
+    try {
+      savedJobIds = JSON.parse(savedJobIds);
+    } catch (e) {
+      savedJobIds = savedJobIds.split(",");
+    }
+  }
+
+  if (!Array.isArray(savedJobIds) || savedJobIds.length === 0) {
+    return [];
+  }
+
+  // Clean IDs of accidental extra quotes or whitespace
+  const cleanIds = savedJobIds
+    .map((item) => {
+      let strId = typeof item === "object" && item !== null ? item.id || item._id : item;
+      return String(strId).replace(/^["']|["']$/g, "").trim();
+    })
+    .filter(Boolean);
+
+  if (cleanIds.length === 0) return [];
+
+  return await Job.findAll({
+    where: { id: cleanIds },
+    include: [{ model: User, as: "employer", attributes: ["name", "email"] }],
+  });
+};
+
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone, role, companyName, designation } = req.body;
@@ -17,17 +49,18 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Email already registered" });
     }
 
-    const user = await User.create({ 
-      name, 
-      email, 
-      password, 
-      phone, 
-      role, 
-      companyName, 
-      designation 
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role,
+      companyName: companyName || null,
+      designation: designation || null,
     });
 
-    sendToken(user, 201, res, "User registered successfully");
+    // Pass the Sequelize 'user' model instance directly so user.getJWTToken() works
+    await sendToken(user, 201, res, "User registered successfully");
   } catch (error) {
     next(error);
   }
@@ -55,7 +88,8 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: `No ${role} account found with this email` });
     }
 
-    sendToken(user, 200, res, "Login successful");
+    // Pass the Sequelize 'user' model instance directly so user.getJWTToken() works
+    await sendToken(user, 200, res, "Login successful");
   } catch (error) {
     next(error);
   }
@@ -72,15 +106,27 @@ exports.logout = async (req, res, next) => {
   }
 };
 
+// Updated to attach populated savedJobs object array to req.user for Redux sync
 exports.getCurrentUser = async (req, res, next) => {
   try {
-    res.status(200).json({ success: true, user: req.user });
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ["password"] },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const userData = user.toJSON();
+    userData.savedJobs = await getPopulatedSavedJobs(user.savedJobs);
+
+    res.status(200).json({ success: true, user: userData });
   } catch (error) {
     next(error);
   }
 };
 
-// UPDATED: Profile update handler now saves companyName and designation
+// Profile update handler saves companyName & designation and returns populated savedJobs
 exports.updateProfile = async (req, res, next) => {
   try {
     const { name, phone, companyName, designation } = req.body;
@@ -92,12 +138,16 @@ exports.updateProfile = async (req, res, next) => {
 
     await req.user.save();
 
-    res.status(200).json({ success: true, message: "Profile updated successfully", user: req.user });
+    const userData = req.user.toJSON();
+    userData.savedJobs = await getPopulatedSavedJobs(req.user.savedJobs);
+
+    res.status(200).json({ success: true, message: "Profile updated successfully", user: userData });
   } catch (error) {
     next(error);
   }
 };
 
+// Stores resume locally and extracts plain text for AI processing
 exports.uploadResume = async (req, res, next) => {
   try {
     if (!req.files || !req.files.resume) {
@@ -139,7 +189,7 @@ exports.uploadResume = async (req, res, next) => {
     }
 
     req.user.resumeUrl = `/uploads/resumes/${fileName}`;
-    req.user.resumeText = resumeText.slice(0, 20000);
+    req.user.resumeText = resumeText.slice(0, 20000); // Guard against huge files
     await req.user.save();
 
     res.status(200).json({
@@ -152,36 +202,59 @@ exports.uploadResume = async (req, res, next) => {
   }
 };
 
+// Delete user's active resume file and clear DB references
+exports.deleteResume = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+
+    if (!user || !user.resumeUrl) {
+      return res.status(404).json({ success: false, message: "No active resume found to delete" });
+    }
+
+    // Delete local physical file if present
+    if (user.resumeUrl.startsWith("/uploads/")) {
+      const filePath = path.join(__dirname, "..", user.resumeUrl);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (fileErr) {
+          console.error("Failed to delete local resume file:", fileErr.message);
+        }
+      }
+    }
+
+    // Reset database fields
+    user.resumeUrl = null;
+    user.resumePublicId = null;
+    user.resumeText = null;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Resume deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] }
+      attributes: { exclude: ["password"] },
     });
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    let savedJobIds = user.savedJobs || [];
-    if (typeof savedJobIds === "string") {
-      try {
-        savedJobIds = JSON.parse(savedJobIds);
-      } catch (e) {
-        savedJobIds = [];
-      }
-    }
-
-    const savedJobs = await Job.findAll({
-      where: { id: savedJobIds },
-      include: [{ model: User, as: "employer", attributes: ["name", "email"] }]
-    });
-
     const userData = user.toJSON();
-    userData.savedJobs = savedJobs;
+    userData.savedJobs = await getPopulatedSavedJobs(user.savedJobs);
 
     res.status(200).json({
       success: true,
-      user: userData
+      user: userData,
     });
   } catch (error) {
     next(error);

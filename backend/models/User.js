@@ -61,6 +61,32 @@ const User = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    
+    // ADDED: Saved Jobs column with auto JSON stringification/parsing
+    savedJobs: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: "[]",
+      get() {
+        const rawValue = this.getDataValue("savedJobs");
+        if (!rawValue) return [];
+        if (Array.isArray(rawValue)) return rawValue;
+        try {
+          return JSON.parse(rawValue);
+        } catch (e) {
+          return rawValue.split(",").map((s) => s.trim());
+        }
+      },
+      set(value) {
+        if (Array.isArray(value)) {
+          this.setDataValue("savedJobs", JSON.stringify(value));
+        } else if (typeof value === "string") {
+          this.setDataValue("savedJobs", value);
+        } else {
+          this.setDataValue("savedJobs", "[]");
+        }
+      },
+    },
   },
   {
     tableName: "users",

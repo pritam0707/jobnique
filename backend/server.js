@@ -22,9 +22,11 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 app.use(
   fileUpload({
     useTempFiles: true,
@@ -48,15 +50,22 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 4000;
 
 const startServer = async () => {
-  await connectDB();
-  // sync({ alter: true }) alters existing tables to add new columns like companyName & designation
-  if (process.env.NODE_ENV !== "production") {
-    await sequelize.sync({ alter: true });
-    console.log("Database synced and schema updated successfully.");
+  try {
+    await connectDB();
+
+    // { alter: true } forces Sequelize to add/update missing columns during development
+    if (process.env.NODE_ENV !== "production") {
+      await sequelize.sync({ alter: true });
+      console.log("Database synchronized & updated schema!");
+    }
+
+    app.listen(PORT, () => {
+      console.log(`Jobnique server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error);
+    process.exit(1);
   }
-  app.listen(PORT, () => {
-    console.log(`Jobnique server running on port ${PORT}`);
-  });
 };
 
 startServer();

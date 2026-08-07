@@ -1,5 +1,56 @@
 const { Job, User } = require("../models");
 
+// Robust helper to parse savedJobs regardless of DB storage format
+const parseSavedJobIds = (rawInput) => {
+  if (!rawInput) return [];
+
+  let input = rawInput;
+
+  // Handles double-escaped JSON strings from SQL text columns
+  while (typeof input === "string") {
+    const trimmed = input.trim();
+    if (!trimmed) return [];
+
+    try {
+      input = JSON.parse(trimmed);
+    } catch (e) {
+      // Fallback for comma-separated strings like "1,2,3"
+      input = trimmed.split(",");
+      break;
+    }
+  }
+
+  if (!Array.isArray(input)) {
+    input = [input];
+  }
+
+  // Extract clean ID strings, strip quotes, and filter out nulls/empties
+  return input
+    .map((item) => {
+      let strId = "";
+      if (typeof item === "object" && item !== null) {
+        strId = String(item.id || item._id || "").trim();
+      } else {
+        strId = String(item).trim();
+      }
+      // Remove accidental literal quotes e.g. '"1"' -> '1'
+      return strId.replace(/^["']|["']$/g, "").trim();
+    })
+    .filter((id) => id && id !== "null" && id !== "undefined");
+};
+
+// Helper function to fetch populated job records
+const getPopulatedSavedJobs = async (userSavedJobs) => {
+  const cleanIds = parseSavedJobIds(userSavedJobs);
+
+  if (cleanIds.length === 0) return [];
+
+  return await Job.findAll({
+    where: { id: cleanIds },
+    include: [{ model: User, as: "employer", attributes: ["id", "name", "email", "companyName", "designation"] }],
+  });
+};
+
 // Post a new job posting (Employers only)
 exports.postJob = async (req, res, next) => {
   try {
@@ -23,7 +74,10 @@ exports.postJob = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Please provide all required job details" });
     }
 
-    if ((!fixedSalary && (!salaryFrom || !salaryTo)) && (fixedSalary && (salaryFrom || salaryTo))) {
+    const hasFixed = Boolean(fixedSalary);
+    const hasRange = Boolean(salaryFrom || salaryTo);
+
+    if ((!hasFixed && !hasRange) || (hasFixed && hasRange)) {
       return res.status(400).json({
         success: false,
         message: "Provide either a fixed salary or a salary range, not both",
@@ -37,9 +91,9 @@ exports.postJob = async (req, res, next) => {
       country,
       city,
       location,
-      fixedSalary,
-      salaryFrom,
-      salaryTo,
+      fixedSalary: fixedSalary || null,
+      salaryFrom: salaryFrom || null,
+      salaryTo: salaryTo || null,
       postedBy: req.user.id,
     });
 
@@ -174,32 +228,43 @@ exports.toggleSaveJob = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    const jobId = req.params.id;
+    // Clean and normalize target ID from req.params.id
+    const targetJobId = String(req.params.id).replace(/^["']|["']$/g, "").trim();
 
-    let savedJobs = user.savedJobs || [];
-    if (typeof savedJobs === "string") {
-      try {
-        savedJobs = JSON.parse(savedJobs);
-      } catch (e) {
-        savedJobs = [];
-      }
-    }
+    // 1. Clean and parse existing IDs
+    const existingIds = parseSavedJobIds(user.savedJobs);
 
-    const jobIndex = savedJobs.indexOf(jobId);
+    // 2. Loose check to see if target ID exists in saved list
+    const isAlreadySaved = existingIds.some((id) => String(id) === targetJobId);
 
-    if (jobIndex > -1) {
-      savedJobs.splice(jobIndex, 1);
+    let updatedSavedIds = [];
+    if (isAlreadySaved) {
+      // UNSAVE: Remove all instances matching target ID
+      updatedSavedIds = existingIds.filter((id) => String(id) !== targetJobId);
     } else {
-      savedJobs.push(jobId);
+      // SAVE: Add target ID (ensure uniqueness)
+      updatedSavedIds = Array.from(new Set([...existingIds, targetJobId]));
     }
 
-    user.savedJobs = savedJobs;
-    await user.save();
+    // 3. Format payload based on column behavior
+    const isJsonColumn = Array.isArray(user.savedJobs) || typeof user.savedJobs === "object";
+    const valueToSave = isJsonColumn && user.savedJobs !== null
+      ? updatedSavedIds
+      : JSON.stringify(updatedSavedIds);
 
-    res.status(200).json({
+    // 4. Force direct DB update to prevent Sequelize instance change-tracking skip on unsave
+    await User.update(
+      { savedJobs: valueToSave },
+      { where: { id: req.user.id } }
+    );
+
+    // 5. Retrieve populated job models for Redux/UI state sync
+    const populatedSavedJobs = await getPopulatedSavedJobs(updatedSavedIds);
+
+    return res.status(200).json({
       success: true,
-      message: jobIndex > -1 ? "Job removed from saved items" : "Job saved successfully",
-      savedJobs: user.savedJobs,
+      message: isAlreadySaved ? "Job removed from saved items" : "Job saved successfully",
+      savedJobs: populatedSavedJobs,
     });
   } catch (error) {
     next(error);

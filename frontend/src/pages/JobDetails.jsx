@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
-import { fetchCurrentUser } from "../store/slices/authSlice";
+import { toggleSaveJob } from "../store/slices/authSlice";
 import {
   MapPin,
   IndianRupee,
@@ -32,19 +32,38 @@ const JobDetails = () => {
   const [applyStatus, setApplyStatus] = useState({ loading: false, message: "", error: "" });
   const [savingJob, setSavingJob] = useState(false);
 
-  // Check if job is currently saved in user's profile via Redux
-  const isSaved = user?.savedJobs?.some(
-    (saved) => (saved._id || saved.id || saved) === id
-  );
+  // String-safe and JSON-string-safe bookmark lookup
+  const isSaved = () => {
+    if (!user?.savedJobs) return false;
+    let savedList = user.savedJobs;
+
+    if (typeof savedList === "string") {
+      try {
+        savedList = JSON.parse(savedList);
+      } catch (e) {
+        savedList = savedList.split(",");
+      }
+    }
+
+    if (!Array.isArray(savedList)) return false;
+
+    return savedList.some((saved) => {
+      const savedId = typeof saved === "object" ? (saved._id || saved.id) : saved;
+      return String(savedId).replace(/^["']|["']$/g, "").trim() === String(id).replace(/^["']|["']$/g, "").trim();
+    });
+  };
+
+  const savedStatus = isSaved();
 
   useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await api.get(`/jobs/${id}`);
+        // FIXED: Hits /jobs/single/:id endpoint matching jobRoutes.js
+        const res = await api.get(`/jobs/single/${id}`);
         setJob(res.data?.job || res.data);
       } catch (err) {
         console.error("API Fetch error, looking up fallback seed list:", err);
-        const matchedSeed = typeof SEED_JOBS !== "undefined" ? SEED_JOBS.find((j) => (j._id || j.id) === id) : null;
+        const matchedSeed = typeof SEED_JOBS !== "undefined" ? SEED_JOBS.find((j) => String(j._id || j.id) === String(id)) : null;
         if (matchedSeed) {
           setJob(matchedSeed);
         }
@@ -63,8 +82,7 @@ const JobDetails = () => {
 
     setSavingJob(true);
     try {
-      await api.post(`/jobs/save/${id}`);
-      await dispatch(fetchCurrentUser()); // Re-sync user object in Redux
+      await dispatch(toggleSaveJob(id)).unwrap();
     } catch (err) {
       console.error("Failed to toggle save job:", err);
     } finally {
@@ -154,7 +172,7 @@ const JobDetails = () => {
               onClick={handleToggleSave}
               disabled={savingJob}
               className={`p-2.5 rounded-xl border text-xs font-semibold transition-all flex items-center gap-2 ${
-                isSaved
+                savedStatus
                   ? "bg-blue-50 dark:bg-[#2F80ED]/20 border-blue-200 dark:border-[#2F80ED]/40 text-[#2F80ED] dark:text-[#56CCF2]"
                   : "bg-white dark:bg-[#111827] border-slate-200 dark:border-[#1F2937] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               }`}
@@ -162,9 +180,9 @@ const JobDetails = () => {
               {savingJob ? (
                 <Loader2 className="w-4 h-4 animate-spin text-[#2F80ED] dark:text-[#56CCF2]" />
               ) : (
-                <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current text-[#2F80ED] dark:text-[#56CCF2]" : ""}`} />
+                <Bookmark className={`w-4 h-4 ${savedStatus ? "fill-current text-[#2F80ED] dark:text-[#56CCF2]" : ""}`} />
               )}
-              <span className="hidden sm:inline">{isSaved ? "Saved" : "Save Job"}</span>
+              <span className="hidden sm:inline">{savedStatus ? "Saved" : "Save Job"}</span>
             </button>
             <button
               onClick={() => navigator.clipboard.writeText(window.location.href)}

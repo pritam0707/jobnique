@@ -15,7 +15,7 @@ const ContactUs = () => {
         
         {/* Header */}
         <div className="text-center space-y-2 max-w-xl mx-auto flex flex-col items-center">
-          <h1 className="text-3xl font-extrabold tracking-tight">Contact Jobnique</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Contact Jobnique Support Team</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
             Have questions or need assistance? Our support team is here to help you.
           </p>
