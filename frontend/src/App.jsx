@@ -15,6 +15,9 @@ import Register from "./pages/Register";
 import JobDetails from "./pages/JobDetails";
 import SalaryCalculator from "./pages/SalaryCalculator";
 import ForgotPassword from "./pages/ForgotPassword";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 // Employer Pages
 import PostJob from "./pages/Employer/PostJob";
@@ -116,6 +119,11 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Company & Support Pages */}
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           
           <Route
             path="/jobs"
