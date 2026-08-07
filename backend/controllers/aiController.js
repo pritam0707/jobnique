@@ -38,7 +38,7 @@ exports.chatAssistant = async (req, res, next) => {
 // Analyze a job seeker's resume text and return structured feedback.
 exports.analyzeResume = async (req, res, next) => {
   try {
-    const resumeText = req.body.resumeText || req.user.resumeText;
+    const resumeText = req.body.resumeText || (req.user && req.user.resumeText);
 
     if (!resumeText || !resumeText.trim()) {
       return res.status(400).json({
@@ -72,7 +72,7 @@ exports.analyzeResume = async (req, res, next) => {
 // Recommend the best-matching open jobs for a job seeker based on their resume text.
 exports.recommendJobs = async (req, res, next) => {
   try {
-    const resumeText = req.body.resumeText || req.user.resumeText;
+    const resumeText = req.body.resumeText || (req.user && req.user.resumeText);
 
     if (!resumeText || !resumeText.trim()) {
       return res.status(400).json({
@@ -127,6 +127,75 @@ exports.recommendJobs = async (req, res, next) => {
       .map((r) => ({ job: jobsById[r.id], reason: r.reason }));
 
     res.status(200).json({ success: true, recommendations });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Generate custom interview questions for a specific job role.
+exports.generateQuestions = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+
+    if (!role || !role.trim()) {
+      return res.status(400).json({ success: false, message: "Role is required" });
+    }
+
+    const messages = [
+      {
+        role: "system",
+        content:
+          "You are an expert interviewer. Generate 3 realistic interview questions for a candidate applying for a given role.\n" +
+          "Return ONLY a valid JSON array of objects with no markdown tags or prose using this schema:\n" +
+          '[\n  {\n    "id": 1,\n    "category": "Technical" | "Behavioral" | "System Design",\n    "question": "string",\n    "difficulty": "Easy" | "Medium" | "Hard",\n    "answerGuide": "short tip describing what a good answer includes",\n    "completed": false\n  }\n]',
+      },
+      { role: "user", content: `Target Role: ${role}` },
+    ];
+
+    const raw = await groqChat(messages, { temperature: 0.5, max_tokens: 800 });
+
+    let questions = [];
+    try {
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      questions = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch (e) {
+      return res.status(500).json({ success: false, message: "Failed to parse generated questions", raw });
+    }
+
+    res.status(200).json({ success: true, questions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Evaluate a candidate's answer for an interview question.
+exports.evaluateAnswer = async (req, res, next) => {
+  try {
+    const { question, userAnswer } = req.body;
+
+    if (!question || !userAnswer) {
+      return res.status(400).json({
+        success: false,
+        message: "Both question and userAnswer are required",
+      });
+    }
+
+    const messages = [
+      {
+        role: "system",
+        content:
+          "Act as an expert technical recruiter evaluating an interview answer.\n" +
+          "Provide concise, constructive feedback under 120 words detailing strengths, missing details, and a rating out of 10.",
+      },
+      {
+        role: "user",
+        content: `Interview Question: "${question}"\nCandidate Answer: "${userAnswer}"`,
+      },
+    ];
+
+    const feedback = await groqChat(messages, { temperature: 0.4, max_tokens: 350 });
+
+    res.status(200).json({ success: true, feedback });
   } catch (error) {
     next(error);
   }

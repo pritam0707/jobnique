@@ -43,6 +43,15 @@ const DashboardRedirect = () => {
   return <Navigate to="/jobseeker/dashboard" replace />;
 };
 
+const ProfileRedirect = () => {
+  const { user } = useSelector((state) => state.auth);
+
+  if (user?.role === "Employer") {
+    return <EmployerProfile />;
+  }
+  return <JobSeekerProfile />;
+};
+
 const JobSeekerOnlyRoute = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
 
@@ -136,6 +145,7 @@ export default function App() {
             }
           />
 
+          {/* EMPLOYER ROUTES */}
           <Route
             path="/post-job"
             element={
@@ -169,6 +179,7 @@ export default function App() {
             }
           />
 
+          {/* JOB SEEKER ROUTES */}
           <Route
             path="/jobseeker/dashboard"
             element={
@@ -186,15 +197,17 @@ export default function App() {
             }
           />
 
+          {/* GENERIC PROFILE ROUTE */}
           <Route
             path="/profile"
             element={
               <ProtectedRoute>
-                <JobSeekerProfile />
+                <ProfileRedirect />
               </ProtectedRoute>
             }
           />
 
+          {/* 404 FALLBACK */}
           <Route
             path="*"
             element={

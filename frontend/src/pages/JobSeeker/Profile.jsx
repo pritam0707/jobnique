@@ -7,197 +7,18 @@ import {
   User,
   Phone,
   Mail,
-  FileText,
-  Upload,
-  Sparkles,
-  Bot,
   CheckCircle2,
   AlertCircle,
   Loader2,
-  ExternalLink,
-  ShieldCheck,
   Save,
-  Cpu,
   BadgeCheck,
   X,
   Edit,
-  Trash2,
-  Star,
-  Zap,
   Bookmark,
   Building2,
   MapPin,
-  ArrowUpRight,
-  AlertTriangle,
-  Tag
+  ArrowUpRight
 } from "lucide-react";
-
-// Formatted AI Output helper
-const FormattedAIOutput = ({ text }) => {
-  if (!text) return null;
-  const rawSections = text.split(/(?=\*\*[^*]+\*\*)/g);
-
-  return (
-    <div className="space-y-4">
-      {rawSections.map((section, idx) => {
-        const trimmed = section.trim();
-        if (!trimmed) return null;
-
-        const headerMatch = trimmed.match(/^\*\*([^*]+)\*\*/);
-        const headerTitle = headerMatch ? headerMatch[1].trim() : "";
-        const bodyText = headerMatch ? trimmed.replace(/^\*\*([^*]+)\*\*/, "").trim() : trimmed;
-
-        if (headerTitle.toLowerCase().includes("overall score")) return null;
-
-        let icon = <Zap className="w-4 h-4 text-[#2F80ED] dark:text-[#56CCF2]" />;
-        let headerColor = "text-[#2F80ED] dark:text-[#56CCF2]";
-        let bulletIcon = <span className="w-1.5 h-1.5 rounded-full bg-[#2F80ED] dark:bg-[#56CCF2] mt-2 shrink-0" />;
-
-        if (headerTitle.toLowerCase().includes("strength")) {
-          icon = <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
-          headerColor = "text-emerald-700 dark:text-emerald-400";
-          bulletIcon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />;
-        } else if (headerTitle.toLowerCase().includes("improve") || headerTitle.toLowerCase().includes("gap")) {
-          icon = <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
-          headerColor = "text-amber-700 dark:text-amber-400";
-          bulletIcon = <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />;
-        } else if (headerTitle.toLowerCase().includes("keyword") || headerTitle.toLowerCase().includes("skill")) {
-          icon = <Tag className="w-4 h-4 text-sky-600 dark:text-sky-400" />;
-          headerColor = "text-sky-700 dark:text-sky-400";
-          bulletIcon = <Tag className="w-3.5 h-3.5 text-sky-500 shrink-0 mt-0.5" />;
-        }
-
-        const lines = bodyText.split("\n").filter((l) => l.trim() !== "");
-
-        return (
-          <div key={idx} className="p-4 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl space-y-2">
-            {headerTitle && (
-              <h3 className={`text-sm font-bold ${headerColor} flex items-center gap-2 border-b border-[#E5E7EB] dark:border-[#374151] pb-2 mb-3`}>
-                {icon}
-                <span>{headerTitle}</span>
-              </h3>
-            )}
-
-            <div className="space-y-2">
-              {lines.map((line, lIdx) => {
-                const isBullet = line.trim().startsWith("*") || line.trim().startsWith("-");
-                const cleanLine = line.replace(/^[*-]\s*/, "").trim();
-
-                const formattedHtml = cleanLine.replace(
-                  /\*\*(.*?)\*\*/g,
-                  '<strong class="text-[#111827] dark:text-white font-semibold bg-[#EDF5FF] dark:bg-[#2F80ED]/20 px-1.5 py-0.5 rounded border border-[#2F80ED]/20">$1</strong>'
-                );
-
-                if (isBullet) {
-                  return (
-                    <div key={lIdx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">
-                      {bulletIcon}
-                      <p className="flex-1" dangerouslySetInnerHTML={{ __html: formattedHtml }} />
-                    </div>
-                  );
-                }
-
-                return (
-                  <p key={lIdx} className="text-xs sm:text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed" dangerouslySetInnerHTML={{ __html: formattedHtml }} />
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Scorecard Component
-const ResumeScoreCard = ({ text }) => {
-  if (!text) return null;
-
-  const scoreMatch = text.match(/Overall Score:\s*\*?(\d+)(?:\/(\d+))?\*?/i) || text.match(/(\d+)\/10/);
-  
-  let scoreNum = 7;
-  let maxScore = 10;
-
-  if (scoreMatch) {
-    scoreNum = parseInt(scoreMatch[1], 10);
-    if (scoreMatch[2]) maxScore = parseInt(scoreMatch[2], 10);
-  }
-
-  const percentage = Math.min(100, Math.round((scoreNum / maxScore) * 100));
-
-  let scoreColor = "text-emerald-600 dark:text-emerald-400";
-  let strokeColor = "#10B981";
-  let badgeBg = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300";
-  let label = "Strong Candidate";
-
-  if (percentage < 50) {
-    scoreColor = "text-red-600 dark:text-red-400";
-    strokeColor = "#EF4444";
-    badgeBg = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300";
-    label = "Needs Optimization";
-  } else if (percentage < 75) {
-    scoreColor = "text-amber-600 dark:text-amber-400";
-    strokeColor = "#F59E0B";
-    badgeBg = "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300";
-    label = "Good Potential";
-  }
-
-  const summaryMatch = text.match(/\*\*Overall Score:[^*]+\*\*\s*([\s\S]*?)$/i);
-  const summaryText = summaryMatch ? summaryMatch[1].trim() : "";
-
-  return (
-    <div className="p-5 sm:p-6 bg-gradient-to-r from-[#2F80ED] to-[#2563EB] border border-[#2F80ED] rounded-3xl shadow-lg shadow-[#2F80ED]/15 relative overflow-hidden mb-6 text-white">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="space-y-2 text-center sm:text-left flex-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-xs font-semibold">
-            <Star className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-            <span>AI Audit Breakdown</span>
-          </div>
-
-          <h3 className="text-xl font-bold tracking-tight">
-            Resume Audit Index
-          </h3>
-
-          <p className="text-xs text-blue-100 max-w-md leading-relaxed">
-            {summaryText || "Calculated based on skill density, formatting clarity, quantifiable impact metrics, and key industry term alignment."}
-          </p>
-        </div>
-
-        <div className="flex flex-col items-center gap-2 bg-white dark:bg-[#111827] p-4 rounded-2xl shrink-0 min-w-[150px] shadow-sm text-[#111827] dark:text-white transition-colors duration-300">
-          <div className="relative w-20 h-20 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-[#F7FAFC] dark:text-[#1F2937]"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="transition-all duration-1000 ease-out"
-                strokeDasharray={`${percentage}, 100`}
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke={strokeColor}
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center">
-              <span className={`text-lg font-extrabold ${scoreColor}`}>
-                {scoreNum}/{maxScore}
-              </span>
-            </div>
-          </div>
-
-          <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${badgeBg}`}>
-            {label}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const Profile = () => {
   const { user } = useSelector((state) => state.auth);
@@ -217,18 +38,6 @@ const Profile = () => {
       setForm({ name: user.name || "", phone: user.phone || "" });
     }
   }, [user]);
-
-  // Resume States
-  const [resumeFile, setResumeFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [deletingResume, setDeletingResume] = useState(false);
-  const [resumeMsg, setResumeMsg] = useState("");
-  const [resumeErr, setResumeErr] = useState("");
-
-  // AI Analysis States
-  const [analysis, setAnalysis] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeErr, setAnalyzeErr] = useState("");
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -250,47 +59,6 @@ const Profile = () => {
     }
   };
 
-  const handleResumeUpload = async (e) => {
-    e.preventDefault();
-    if (!resumeFile) return;
-
-    setUploading(true);
-    setResumeMsg("");
-    setResumeErr("");
-
-    const formData = new FormData();
-    formData.append("resume", resumeFile);
-
-    try {
-      await api.post("/auth/upload-resume", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      await dispatch(fetchCurrentUser());
-      setResumeMsg("Resume uploaded and indexed successfully");
-      setResumeFile(null);
-    } catch (err) {
-      setResumeErr(err.response?.data?.message || "Failed to upload resume");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleResumeDelete = async () => {
-    setDeletingResume(true);
-    setResumeMsg("");
-    setResumeErr("");
-
-    try {
-      await api.delete("/auth/delete-resume");
-      await dispatch(fetchCurrentUser());
-      setResumeMsg("Resume deleted successfully");
-    } catch (err) {
-      setResumeErr(err.response?.data?.message || "Failed to delete resume");
-    } finally {
-      setDeletingResume(false);
-    }
-  };
-
   const handleUnsaveJob = async (jobId) => {
     try {
       await api.post(`/jobs/save/${jobId}`);
@@ -298,27 +66,6 @@ const Profile = () => {
     } catch (err) {
       console.error("Failed to remove saved job:", err);
     }
-  };
-
-  const handleAnalyze = async () => {
-    setAnalyzing(true);
-    setAnalyzeErr("");
-    setAnalysis("");
-    try {
-      const res = await api.post("/ai/analyze-resume", {});
-      setAnalysis(res.data.feedback);
-    } catch (err) {
-      setAnalyzeErr(err.response?.data?.message || "Failed to analyze resume");
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  const getResumeUrl = () => {
-    if (!user?.resumeUrl) return "";
-    if (user.resumeUrl.startsWith("http")) return user.resumeUrl;
-    const baseUrl = (import.meta.env.VITE_API_URL || "").replace("/api/v1", "");
-    return `${baseUrl}${user.resumeUrl}`;
   };
 
   return (
@@ -354,161 +101,53 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Section Grid: Personal Details & Resume Upload */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* Personal Details */}
-          <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm flex flex-col justify-between transition-colors duration-300">
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-lg font-bold text-[#111827] dark:text-white">Personal Details</h2>
-                </div>
+        {/* Personal Details */}
+        <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm transition-colors duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
+                <User className="w-5 h-5" />
               </div>
-
-              <div className="space-y-4">
-                <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Full Name</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
-                    <User className="w-4 h-4 text-[#9CA3AF]" />
-                    {user?.name || "Not provided"}
-                  </div>
-                </div>
-
-                <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Phone Number</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
-                    <Phone className="w-4 h-4 text-[#9CA3AF]" />
-                    {user?.phone || "Not provided"}
-                  </div>
-                </div>
-
-                <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
-                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Email Address</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
-                    <Mail className="w-4 h-4 text-[#9CA3AF]" />
-                    {user?.email}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="w-full mt-6 py-3 px-5 rounded-2xl font-semibold text-xs text-[#2F80ED] dark:text-[#56CCF2] bg-[#EDF5FF] dark:bg-[#1F2937] hover:bg-[#2F80ED]/10 dark:hover:bg-[#374151] border border-[#2F80ED]/20 dark:border-[#374151] active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <Edit className="w-4 h-4" />
-              <span>Edit Details</span>
-            </button>
-          </div>
-
-          {/* Resume Management */}
-          <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm flex flex-col justify-between transition-colors duration-300">
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 rounded-xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <h2 className="text-lg font-bold text-[#111827] dark:text-white">Resume Document</h2>
-              </div>
-
-              {resumeMsg && (
-                <div className="p-3 mb-5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300">{resumeMsg}</p>
-                </div>
-              )}
-              {resumeErr && (
-                <div className="p-3 mb-5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
-                  <p className="text-xs text-red-700 dark:text-red-300">{resumeErr}</p>
-                </div>
-              )}
-
-              {user?.resumeUrl ? (
-                <div className="p-4 mb-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="p-2.5 bg-[#EDF5FF] dark:bg-[#2F80ED]/20 rounded-xl text-[#2F80ED] dark:text-[#56CCF2]">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <div className="truncate">
-                      <p className="text-xs font-semibold text-[#111827] dark:text-white">Active Resume PDF</p>
-                      <p className="text-[11px] text-[#9CA3AF] truncate">{user.resumeUrl}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 shrink-0">
-                    <a
-                      href={getResumeUrl()}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-2 bg-white dark:bg-[#111827] hover:bg-[#F7FAFC] dark:hover:bg-[#374151] border border-[#E5E7EB] dark:border-[#374151] text-[#111827] dark:text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
-                    >
-                      <span>View</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                    <button
-                      onClick={handleResumeDelete}
-                      disabled={deletingResume}
-                      className="px-3 py-2 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/60 rounded-xl transition-all flex items-center justify-center disabled:opacity-50"
-                      title="Delete Resume"
-                    >
-                      {deletingResume ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 mb-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-dashed border-[#E5E7EB] dark:border-[#374151] rounded-2xl text-center">
-                  <p className="text-xs text-[#9CA3AF]">No active resume uploaded yet</p>
-                </div>
-              )}
-
-              <form onSubmit={handleResumeUpload} className="space-y-4">
-                <div className="relative group border-2 border-dashed border-[#E5E7EB] dark:border-[#374151] hover:border-[#2F80ED] dark:hover:border-[#56CCF2] rounded-2xl p-4 bg-[#F7FAFC] dark:bg-[#1F2937] text-center transition-all cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".pdf,.txt"
-                    onChange={(e) => setResumeFile(e.target.files[0])}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  />
-                  <Upload className="w-6 h-6 text-[#9CA3AF] group-hover:text-[#2F80ED] dark:group-hover:text-[#56CCF2] transition-colors mx-auto mb-2" />
-                  <p className="text-xs font-semibold text-[#111827] dark:text-white mb-1">
-                    {resumeFile ? resumeFile.name : "Choose PDF or TXT to replace/upload"}
-                  </p>
-                  <p className="text-[10px] text-[#9CA3AF]">Max file size 5MB (PDF/TXT only)</p>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={!resumeFile || uploading}
-                  className="w-full py-3 px-4 bg-[#2F80ED] hover:bg-[#2563EB] text-white rounded-2xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-sm shadow-[#2F80ED]/20 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Uploading Resume...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4" />
-                      <span>Upload Selected File</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-[#E5E7EB] dark:border-[#1F2937] flex items-center justify-center gap-2 text-[11px] text-[#9CA3AF]">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Parsed securely for AI recommendation matches</span>
+              <h2 className="text-lg font-bold text-[#111827] dark:text-white">Personal Details</h2>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
+              <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Full Name</span>
+              <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
+                <User className="w-4 h-4 text-[#9CA3AF]" />
+                {user?.name || "Not provided"}
+              </div>
+            </div>
+
+            <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
+              <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Phone Number</span>
+              <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
+                <Phone className="w-4 h-4 text-[#9CA3AF]" />
+                {user?.phone || "Not provided"}
+              </div>
+            </div>
+
+            <div className="bg-[#F7FAFC] dark:bg-[#1F2937] p-4 rounded-2xl border border-[#E5E7EB] dark:border-[#374151]">
+              <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Email Address</span>
+              <div className="flex items-center gap-2 text-sm font-medium text-[#111827] dark:text-white">
+                <Mail className="w-4 h-4 text-[#9CA3AF]" />
+                {user?.email}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="w-full mt-6 py-3 px-5 rounded-2xl font-semibold text-xs text-[#2F80ED] dark:text-[#56CCF2] bg-[#EDF5FF] dark:bg-[#1F2937] hover:bg-[#2F80ED]/10 dark:hover:bg-[#374151] border border-[#2F80ED]/20 dark:border-[#374151] active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Edit className="w-4 h-4" />
+            <span>Edit Details</span>
+          </button>
         </div>
 
-        {/* SAVED JOBS SECTION */}
+        {/* Saved Jobs Section */}
         <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm relative overflow-hidden transition-colors duration-300">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2.5 rounded-2xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
@@ -590,75 +229,6 @@ const Profile = () => {
           )}
         </div>
 
-        {/* AI Resume Analysis Card */}
-        <div className="p-6 sm:p-8 bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl shadow-sm relative overflow-hidden transition-colors duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-[#EDF5FF] dark:bg-[#1F2937] text-[#2F80ED] dark:text-[#56CCF2]">
-                <Bot className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-[#111827] dark:text-white">AI Resume Optimizer</h2>
-                  <span className="px-2 py-0.5 rounded-md bg-[#EDF5FF] dark:bg-[#2F80ED]/20 border border-[#2F80ED]/20 text-[#2F80ED] dark:text-[#56CCF2] text-[10px] font-bold">
-                    PRO
-                  </span>
-                </div>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">
-                  Get instant AI feedback on formatting, keyword optimization, and gaps.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={handleAnalyze}
-              disabled={analyzing || !user?.resumeUrl}
-              className="py-3 px-5 rounded-2xl font-semibold text-xs text-white bg-[#2F80ED] hover:bg-[#2563EB] shadow-lg shadow-[#2F80ED]/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-            >
-              {analyzing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Analyzing Resume...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 text-blue-100" />
-                  <span>Analyze My Resume</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {analyzeErr && (
-            <div className="p-4 mb-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
-              <p className="text-xs text-red-700 dark:text-red-300 font-medium">{analyzeErr}</p>
-            </div>
-          )}
-
-          {analysis ? (
-            <div className="space-y-6">
-              <ResumeScoreCard text={analysis} />
-              <div className="p-5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-2xl text-[#111827] dark:text-white">
-                <div className="flex items-center gap-2 text-[#2F80ED] dark:text-[#56CCF2] font-semibold mb-4 pb-2 border-b border-[#E5E7EB] dark:border-[#374151]">
-                  <Cpu className="w-4 h-4" />
-                  <span>Detailed AI Insights & Feedback</span>
-                </div>
-                <FormattedAIOutput text={analysis} />
-              </div>
-            </div>
-          ) : (
-            !analyzing && (
-              <div className="p-8 border border-dashed border-[#E5E7EB] dark:border-[#374151] rounded-2xl bg-[#F7FAFC] dark:bg-[#1F2937] text-center">
-                <Sparkles className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
-                <p className="text-xs font-semibold text-[#111827] dark:text-white">Ready to audit your resume</p>
-                <p className="text-[11px] text-[#9CA3AF] mt-1 max-w-sm mx-auto">
-                  Click the analyze button above to trigger deep-parsing across technical keywords and hiring manager preferences.
-                </p>
-              </div>
-            )
-          )}
-        </div>
       </div>
 
       {/* Edit Profile Modal */}
@@ -757,7 +327,7 @@ const Profile = () => {
                 type="submit"
                 form="profile-form"
                 disabled={savingProfile}
-                className="py-2.5 px-6 rounded-xl font-semibold text-xs text-white bg-[#2F80ED] hover:bg-[#2563EB] shadow-md shadow-[#2F80ED]/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="py-2.5 px-6 rounded-xl font-semibold text-xs text-white bg-[#2F80ED] hover:bg-[#2563EB] shadow-md shadow-[#2F80ED]/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {savingProfile ? (
                   <>
