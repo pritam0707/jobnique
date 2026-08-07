@@ -21,6 +21,9 @@ const Profile = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
+  // Local state to guarantee immediate UI updates
+  const [localUser, setLocalUser] = useState(user);
+
   // Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -35,17 +38,26 @@ const Profile = () => {
   const [profileMsg, setProfileMsg] = useState("");
   const [profileErr, setProfileErr] = useState("");
 
-  // Sync state with logged-in user
+  // Sync Redux user state into local display state and form state
   useEffect(() => {
     if (user) {
+      setLocalUser(user);
       setForm({
         name: user.name || "",
         phone: user.phone || "",
-        companyName: user.companyName || "",
-        designation: user.designation || "",
+        companyName: user.companyName || user.company || "",
+        designation: user.designation || user.roleTitle || "",
       });
     }
   }, [user]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -53,16 +65,31 @@ const Profile = () => {
     setProfileMsg("");
     setProfileErr("");
 
+    const payload = {
+      name: form.name,
+      phone: form.phone,
+      companyName: form.companyName,
+      designation: form.designation,
+    };
+
     try {
       // 1. Send update request to backend
-      const res = await api.put("/auth/profile", form);
+      const res = await api.put("/auth/profile", payload);
 
-      // 2. Refresh Redux store with latest user data
-      await dispatch(fetchCurrentUser()).unwrap();
+      // 2. Immediately update local display state with submitted values or backend response
+      const updatedData = res.data?.user || res.data?.data || { ...localUser, ...payload };
+      setLocalUser(updatedData);
+
+      // 3. Re-fetch Redux current user state
+      try {
+        await dispatch(fetchCurrentUser()).unwrap();
+      } catch (reduxErr) {
+        console.warn("Redux sync fallback executed:", reduxErr);
+      }
 
       setProfileMsg(res.data?.message || "Profile details updated successfully");
 
-      // 3. Close modal automatically after feedback
+      // 4. Close modal
       setTimeout(() => {
         setIsEditModalOpen(false);
         setProfileMsg("");
@@ -76,7 +103,8 @@ const Profile = () => {
     }
   };
 
-  const isEmployer = user?.role === "Employer";
+  const activeUser = localUser || user;
+  const isEmployer = activeUser?.role === "Employer";
 
   return (
     <div className="relative min-h-screen bg-[#F4F7FB] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
@@ -85,20 +113,20 @@ const Profile = () => {
         {/* Profile Banner */}
         <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden transition-colors">
           <div className="w-20 h-20 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-3xl shadow-lg shadow-blue-500/20 shrink-0">
-            {user?.name ? user.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />}
+            {activeUser?.name ? activeUser.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />}
           </div>
 
           <div className="text-center sm:text-left flex-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-100 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-2">
               <BadgeCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span>{user?.role || "Verified Account"}</span>
+              <span>{activeUser?.role || "Verified Account"}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              {user?.name || "Account Profile"}
+              {activeUser?.name || "Account Profile"}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-center sm:justify-start gap-2">
               <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-              <span>{user?.email}</span>
+              <span>{activeUser?.email}</span>
             </p>
           </div>
         </div>
@@ -124,7 +152,7 @@ const Profile = () => {
                 </span>
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
                   <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                  {user?.name || "Not provided"}
+                  {activeUser?.name || "Not provided"}
                 </div>
               </div>
 
@@ -134,7 +162,7 @@ const Profile = () => {
                 </span>
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
                   <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                  {user?.phone || "Not provided"}
+                  {activeUser?.phone || "Not provided"}
                 </div>
               </div>
 
@@ -144,7 +172,7 @@ const Profile = () => {
                 </span>
                 <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
                   <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-                  <span className="truncate">{user?.email}</span>
+                  <span className="truncate">{activeUser?.email}</span>
                 </div>
               </div>
 
@@ -157,7 +185,7 @@ const Profile = () => {
                     </span>
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
                       <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      {user?.companyName || "Not provided"}
+                      {activeUser?.companyName || activeUser?.company || "Not provided"}
                     </div>
                   </div>
 
@@ -167,7 +195,7 @@ const Profile = () => {
                     </span>
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
                       <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      {user?.designation || "Not provided"}
+                      {activeUser?.designation || activeUser?.roleTitle || "Not provided"}
                     </div>
                   </div>
                 </>
@@ -229,8 +257,9 @@ const Profile = () => {
                     <User className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                     <input
                       type="text"
+                      name="name"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={handleChange}
                       placeholder="John Doe"
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                       required
@@ -246,8 +275,9 @@ const Profile = () => {
                     <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                     <input
                       type="tel"
+                      name="phone"
                       value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      onChange={handleChange}
                       placeholder="+91 98765 43210"
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                     />
@@ -265,8 +295,9 @@ const Profile = () => {
                         <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                         <input
                           type="text"
+                          name="companyName"
                           value={form.companyName}
-                          onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                          onChange={handleChange}
                           placeholder="Acme Corp"
                           className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                         />
@@ -281,8 +312,9 @@ const Profile = () => {
                         <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                         <input
                           type="text"
+                          name="designation"
                           value={form.designation}
-                          onChange={(e) => setForm({ ...form, designation: e.target.value })}
+                          onChange={handleChange}
                           placeholder="Hiring Manager / HR"
                           className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 rounded-2xl outline-none transition-all text-sm"
                         />
@@ -299,7 +331,7 @@ const Profile = () => {
                     <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-4 pointer-events-none" />
                     <input
                       type="email"
-                      value={user?.email || ""}
+                      value={activeUser?.email || ""}
                       readOnly
                       disabled
                       className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 rounded-2xl outline-none text-sm cursor-not-allowed"

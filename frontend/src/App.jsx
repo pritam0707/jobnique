@@ -24,6 +24,7 @@ import PostJob from "./pages/Employer/PostJob";
 import EditJob from "./pages/Employer/EditJob";
 import EmployerDashboard from "./pages/Employer/Dashboard";
 import EmployerProfile from "./pages/Employer/Profile";
+import MyPostedJobs from "./pages/Employer/MyPostedJobs";
 
 // Job Seeker Pages
 import JobSeekerDashboard from "./pages/JobSeeker/Dashboard";
@@ -33,6 +34,7 @@ import Jobs from "./pages/JobSeeker/Jobs";
 // Redux & Icons
 import { fetchCurrentUser } from "./store/slices/authSlice";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+
 
 // =============================================================================
 // HELPER ROUTE COMPONENTS
@@ -71,7 +73,7 @@ export default function App() {
   const dispatch = useDispatch();
   const location = useLocation();
   const { isInitializing } = useSelector((state) => state.auth);
-  
+
   const [showVideo, setShowVideo] = useState(() => {
     return localStorage.getItem("jobnique_has_seen_intro") !== "true";
   });
@@ -104,7 +106,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F7FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F3F4F6] selection:bg-[#56CCF2]/30 selection:text-[#111827] dark:selection:text-[#F3F4F6] flex flex-col relative overflow-x-hidden font-sans transition-colors duration-300">
-      
+
       {showVideo && (
         <div className="fixed inset-0 z-[100] pointer-events-auto">
           <WelcomeIntro onFinish={handleVideoFinish} />
@@ -119,12 +121,12 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          
+
           {/* Company & Support Pages */}
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          
+
           <Route
             path="/jobs"
             element={
@@ -134,7 +136,7 @@ export default function App() {
             }
           />
           <Route path="/jobs/:id" element={<JobDetails />} />
-          
+
           <Route
             path="/salary"
             element={
@@ -183,6 +185,15 @@ export default function App() {
             element={
               <ProtectedRoute role="Employer">
                 <EmployerProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/employer/my-jobs"
+            element={
+              <ProtectedRoute role="Employer">
+                <MyPostedJobs />
               </ProtectedRoute>
             }
           />

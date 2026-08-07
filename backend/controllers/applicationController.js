@@ -57,7 +57,7 @@ exports.getJobApplications = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    if (job.postedBy !== req.user.id) {
+    if (String(job.postedBy) !== String(req.user.id)) {
       return res.status(403).json({ success: false, message: "Not authorized to view these applications" });
     }
 
@@ -76,13 +76,15 @@ exports.getJobApplications = async (req, res, next) => {
 exports.updateApplicationStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const validStatuses = ["Pending", "Reviewed", "Accepted", "Rejected"];
+    const appId = req.params.id || req.params.applicationId;
+
+    const validStatuses = ["Pending", "Reviewed", "Accepted", "Rejected", "Hired"];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid status value" });
     }
 
-    const application = await Application.findByPk(req.params.id, {
+    const application = await Application.findByPk(appId, {
       include: [{ model: Job, as: "job" }],
     });
 
@@ -90,14 +92,15 @@ exports.updateApplicationStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    if (application.job.postedBy !== req.user.id) {
+    // Explicit string conversion prevents type comparison failure (e.g. 1 !== "1")
+    if (application.job && String(application.job.postedBy) !== String(req.user.id)) {
       return res.status(403).json({ success: false, message: "Not authorized to update this application" });
     }
 
     application.status = status;
     await application.save();
 
-    res.status(200).json({ success: true, message: "Application status updated", application });
+    res.status(200).json({ success: true, message: `Application status updated to ${status}`, application });
   } catch (error) {
     next(error);
   }

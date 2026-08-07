@@ -6,7 +6,7 @@ const sendToken = require("../utils/sendToken");
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, companyName, designation } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ success: false, message: "Please fill all required fields" });
@@ -17,7 +17,15 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Email already registered" });
     }
 
-    const user = await User.create({ name, email, password, phone, role });
+    const user = await User.create({ 
+      name, 
+      email, 
+      password, 
+      phone, 
+      role, 
+      companyName, 
+      designation 
+    });
 
     sendToken(user, 201, res, "User registered successfully");
   } catch (error) {
@@ -72,25 +80,24 @@ exports.getCurrentUser = async (req, res, next) => {
   }
 };
 
+// UPDATED: Profile update handler now saves companyName and designation
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, companyName, designation } = req.body;
 
     if (name) req.user.name = name;
     if (phone !== undefined) req.user.phone = phone;
+    if (companyName !== undefined) req.user.companyName = companyName;
+    if (designation !== undefined) req.user.designation = designation;
 
     await req.user.save();
 
-    res.status(200).json({ success: true, message: "Profile updated", user: req.user });
+    res.status(200).json({ success: true, message: "Profile updated successfully", user: req.user });
   } catch (error) {
     next(error);
   }
 };
 
-// Stores the resume locally on disk (backend/uploads/resumes) — no external
-// storage service or extra API key required. Extracts plain text from PDF/TXT
-// files so the AI resume-analysis and job-recommendation features have
-// something to read.
 exports.uploadResume = async (req, res, next) => {
   try {
     if (!req.files || !req.files.resume) {
@@ -118,7 +125,6 @@ exports.uploadResume = async (req, res, next) => {
 
     await file.mv(destPath);
 
-    // Extract plain text for AI features
     let resumeText = "";
     try {
       if (ext === ".pdf") {
@@ -133,7 +139,7 @@ exports.uploadResume = async (req, res, next) => {
     }
 
     req.user.resumeUrl = `/uploads/resumes/${fileName}`;
-    req.user.resumeText = resumeText.slice(0, 20000); // guard against huge files
+    req.user.resumeText = resumeText.slice(0, 20000);
     await req.user.save();
 
     res.status(200).json({
@@ -156,7 +162,6 @@ exports.getUserProfile = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Parse array if stored as string JSON in DB
     let savedJobIds = user.savedJobs || [];
     if (typeof savedJobIds === "string") {
       try {
@@ -166,14 +171,13 @@ exports.getUserProfile = async (req, res, next) => {
       }
     }
 
-    // Fetch details for bookmarked jobs
     const savedJobs = await Job.findAll({
       where: { id: savedJobIds },
       include: [{ model: User, as: "employer", attributes: ["name", "email"] }]
     });
 
     const userData = user.toJSON();
-    userData.savedJobs = savedJobs; // Attach populated job objects
+    userData.savedJobs = savedJobs;
 
     res.status(200).json({
       success: true,

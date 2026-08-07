@@ -16,8 +16,10 @@ const sendToken = (user, statusCode, res, message) => {
     email: user.email,
     role: user.role,
     phone: user.phone,
-    resumeUrl: user.resumeUrl, // 👈 ADDED: Sends resume URL on login/register
-    resumeText: user.resumeText, // 👈 ADDED: Sends extracted resume text
+    companyName: user.companyName, // 👈 ADDED: Sends company name
+    designation: user.designation, // 👈 ADDED: Sends designation
+    resumeUrl: user.resumeUrl,
+    resumeText: user.resumeText,
   };
 
   res.status(statusCode).cookie("token", token, options).json({

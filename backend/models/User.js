@@ -34,6 +34,16 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    // ADDED: Company Name for Employers
+    companyName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    // ADDED: Designation / Job Title for Employers
+    designation: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     role: {
       type: DataTypes.ENUM("Job Seeker", "Employer"),
       allowNull: false,

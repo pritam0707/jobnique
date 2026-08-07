@@ -54,7 +54,13 @@ exports.getAllJobs = async (req, res, next) => {
   try {
     const jobs = await Job.findAll({
       where: { expired: false },
-      include: [{ model: User, as: "employer", attributes: ["id", "name", "email"] }],
+      include: [
+        { 
+          model: User, 
+          as: "employer", 
+          attributes: ["id", "name", "email", "companyName", "designation"] 
+        }
+      ],
       order: [["createdAt", "DESC"]],
     });
 
@@ -68,7 +74,13 @@ exports.getAllJobs = async (req, res, next) => {
 exports.getSingleJob = async (req, res, next) => {
   try {
     const job = await Job.findByPk(req.params.id, {
-      include: [{ model: User, as: "employer", attributes: ["id", "name", "email"] }],
+      include: [
+        { 
+          model: User, 
+          as: "employer", 
+          attributes: ["id", "name", "email", "companyName", "designation"] 
+        }
+      ],
     });
 
     if (!job) {
@@ -86,10 +98,26 @@ exports.getEmployerJobs = async (req, res, next) => {
   try {
     const jobs = await Job.findAll({
       where: { postedBy: req.user.id },
+      include: [
+        { 
+          model: User, 
+          as: "employer", 
+          attributes: ["id", "name", "email", "companyName", "designation"] 
+        }
+      ],
       order: [["createdAt", "DESC"]],
     });
 
-    res.status(200).json({ success: true, count: jobs.length, jobs });
+    // Map companyName dynamically if present on employer relation
+    const formattedJobs = jobs.map((job) => {
+      const jobJson = job.toJSON();
+      return {
+        ...jobJson,
+        companyName: jobJson.companyName || jobJson.employer?.companyName || req.user.companyName || "Your Company",
+      };
+    });
+
+    res.status(200).json({ success: true, count: formattedJobs.length, jobs: formattedJobs });
   } catch (error) {
     next(error);
   }
@@ -104,7 +132,7 @@ exports.updateJob = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    if (job.postedBy !== req.user.id) {
+    if (String(job.postedBy) !== String(req.user.id)) {
       return res.status(403).json({ success: false, message: "Not authorized to update this job" });
     }
 
@@ -125,7 +153,7 @@ exports.deleteJob = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    if (job.postedBy !== req.user.id) {
+    if (String(job.postedBy) !== String(req.user.id)) {
       return res.status(403).json({ success: false, message: "Not authorized to delete this job" });
     }
 
@@ -148,19 +176,20 @@ exports.toggleSaveJob = async (req, res, next) => {
 
     const jobId = req.params.id;
 
-    // Handle initial state if savedJobs is null or stringified JSON
     let savedJobs = user.savedJobs || [];
     if (typeof savedJobs === "string") {
-      savedJobs = JSON.parse(savedJobs);
+      try {
+        savedJobs = JSON.parse(savedJobs);
+      } catch (e) {
+        savedJobs = [];
+      }
     }
 
     const jobIndex = savedJobs.indexOf(jobId);
 
     if (jobIndex > -1) {
-      // Remove from saved jobs if already present
       savedJobs.splice(jobIndex, 1);
     } else {
-      // Add to saved jobs if not present
       savedJobs.push(jobId);
     }
 

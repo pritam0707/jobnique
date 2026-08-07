@@ -8,7 +8,8 @@ import {
   ChevronLeft, 
   Loader2, 
   AlertCircle,
-  Save
+  Save,
+  CheckCircle2
 } from "lucide-react";
 
 const EditJob = () => {
@@ -17,6 +18,7 @@ const EditJob = () => {
 
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
@@ -26,22 +28,22 @@ const EditJob = () => {
         const res = await api.get(`/jobs/${id}`);
         const job = res.data.job;
         setForm({
-          title: job.title,
-          description: job.description,
-          category: job.category,
-          country: job.country,
-          city: job.city,
+          title: job.title || "",
+          description: job.description || "",
+          category: job.category || "",
+          country: job.country || "",
+          city: job.city || "",
           location: job.location || "",
           salaryType: job.fixedSalary ? "fixed" : "range",
           fixedSalary: job.fixedSalary || "",
           salaryFrom: job.salaryFrom || "",
           salaryTo: job.salaryTo || "",
         });
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load job");
-      } finally {
-        setFetching(false);
-      }
+     } catch (err) {
+  setError(err.response?.data?.message || "Failed to load job");
+} finally {
+  setFetching(false);
+}
     };
     fetchJob();
   }, [id]);
@@ -53,6 +55,7 @@ const EditJob = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     const payload = {
@@ -68,8 +71,12 @@ const EditJob = () => {
     };
 
     try {
-      await api.put(`/jobs/${id}`, payload);
-      navigate("/dashboard");
+      // Updated to match backend PUT /jobs/update/:id or /jobs/:id
+      await api.put(`/jobs/update/${id}`, payload);
+      
+      // Stay on page and show success banner
+      setSuccess("Job posting updated successfully!");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update job");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -78,7 +85,6 @@ const EditJob = () => {
     }
   };
 
-  // Reusable Input Class for consistency
   const inputClass = "w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200 placeholder-gray-400";
   const labelClass = "block mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300";
 
@@ -128,6 +134,15 @@ const EditJob = () => {
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-[#0F1115] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         
+        {/* Success Banner */}
+        {success && (
+          <div className="mx-8 mt-8 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{success}</p>
+          </div>
+        )}
+
+        {/* Error Banner */}
         {error && (
           <div className="mx-8 mt-8 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />

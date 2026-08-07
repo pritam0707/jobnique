@@ -49,9 +49,10 @@ const PORT = process.env.PORT || 4000;
 
 const startServer = async () => {
   await connectDB();
-  // sync() is fine for local dev; use migrations for production
+  // sync({ alter: true }) alters existing tables to add new columns like companyName & designation
   if (process.env.NODE_ENV !== "production") {
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
+    console.log("Database synced and schema updated successfully.");
   }
   app.listen(PORT, () => {
     console.log(`Jobnique server running on port ${PORT}`);
