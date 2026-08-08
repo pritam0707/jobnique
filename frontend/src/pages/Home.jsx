@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import logo from "../assets/logo.png"; // Import your custom logo
 import { 
   Search, 
   Sparkles, 
@@ -133,9 +134,11 @@ const Home = () => {
             
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-[14px] bg-[#2F80ED] flex items-center justify-center shadow-[0_4px_12px_rgba(47,128,237,0.3)] group-hover:scale-105 transition-transform">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
+              <img 
+                src={logo} 
+                alt="Jobnique Logo" 
+                className="w-10 h-10 object-contain rounded-[14px] group-hover:scale-105 transition-transform" 
+              />
               <span className="text-[20px] font-bold tracking-tight text-[#111827] dark:text-white">
                 Jobnique<span className="text-[#2F80ED]">.</span>
               </span>
@@ -511,9 +514,11 @@ const Home = () => {
             {/* Brand Column */}
             <div className="space-y-4">
               <Link to="/" className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
-                  <Sparkles className="w-5 h-5" />
-                </div>
+                <img 
+                  src={logo} 
+                  alt="Jobnique Logo" 
+                  className="w-9 h-9 object-contain rounded-[12px]" 
+                />
                 <span className="text-xl font-bold text-white tracking-tight">
                   Jobnique<span className="text-indigo-500">.</span>
                 </span>

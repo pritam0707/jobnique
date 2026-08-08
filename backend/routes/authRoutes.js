@@ -7,8 +7,9 @@ const {
   updateProfile,
   uploadResume,
   deleteResume,
-  forgotPassword, // 👈 Added
-  resetPassword,  // 👈 Added
+  forgotPassword,
+  resetPassword,
+  googleLogin, // 👈 Added Google login controller
 } = require("../controllers/authController");
 const { isAuthenticated } = require("../middlewares/auth");
 
@@ -17,8 +18,9 @@ const router = express.Router();
 // Public Authentication Routes
 router.post("/register", register);
 router.post("/login", login);
-router.post("/forgot-password", forgotPassword); // 👈 Added route for forgot password
-router.post("/reset-password/:token", resetPassword); // 👈 Added route for reset password
+router.post("/google", googleLogin); // 👈 Added route for Google authentication
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
 // Protected Routes (Require Authentication)
 router.get("/logout", isAuthenticated, logout);

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../store/slices/authSlice";
+import { loginUser, googleLogin } from "../store/slices/authSlice";
+import { GoogleLogin } from "@react-oauth/google";
 import { 
   Sparkles, 
   Mail, 
@@ -34,90 +35,99 @@ const Login = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const result = await dispatch(googleLogin({ 
+      token: credentialResponse.credential, 
+      role: form.role 
+    }));
+
+    if (googleLogin.fulfilled.match(result)) {
+      navigate("/dashboard");
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error("Google Sign-In Failed");
+  };
+
   return (
-    <div className="min-h-screen bg-[#F7FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F3F4F6] flex flex-col justify-center py-16 sm:px-6 lg:px-8 font-sans animate-fadeIn transition-colors duration-300">
+    <div className="min-h-screen bg-[#F7FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F3F4F6] flex flex-col justify-center py-6 sm:px-6 lg:px-8 font-sans animate-fadeIn transition-colors duration-300">
       
       {/* Brand Header */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-          <div className="w-12 h-12 rounded-[16px] bg-[#2F80ED] flex items-center justify-center shadow-[0_4px_14px_rgba(47,128,237,0.3)] group-hover:scale-105 transition-transform">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-[24px] font-bold tracking-tight text-[#111827] dark:text-white">
-            Jobnique
-          </span>
-        </Link>
-        <h1 className="text-[32px] font-bold tracking-tight text-[#111827] dark:text-white mb-2">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-4">
+        
+        <h1 className="text-[26px] font-bold tracking-tight text-[#111827] dark:text-white mb-1">
           Welcome back
         </h1>
-        <p className="text-[16px] text-[#6B7280] dark:text-[#9CA3AF]">
+        <p className="text-[14px] text-[#6B7280] dark:text-[#9CA3AF]">
           Sign in to access your dashboard and applications
         </p>
       </div>
 
       {/* Main Card Container */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-[460px]">
-        <div className="bg-white dark:bg-[#111827] py-10 px-6 sm:px-10 border border-[#E5E7EB] dark:border-[#1F2937] rounded-[28px] shadow-[0_10px_40px_rgb(0,0,0,0.06)] dark:shadow-none transition-colors duration-300">
+      <div className="sm:mx-auto sm:w-full sm:max-w-[440px]">
+        <div className="bg-white dark:bg-[#111827] py-6 px-6 sm:px-8 border border-[#E5E7EB] dark:border-[#1F2937] rounded-[24px] shadow-[0_10px_40px_rgb(0,0,0,0.06)] dark:shadow-none transition-colors duration-300">
           
           {/* Error Banner */}
           {error && (
-            <div className="mb-6 p-4 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-[16px] flex items-start gap-3 animate-fadeIn">
-              <AlertCircle className="w-5 h-5 text-[#EF4444] shrink-0 mt-0.5" />
-              <p className="text-[14px] text-[#EF4444] font-medium leading-relaxed">
+            <div className="mb-4 p-3 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-[14px] flex items-start gap-2.5 animate-fadeIn">
+              <AlertCircle className="w-4 h-4 text-[#EF4444] shrink-0 mt-0.5" />
+              <p className="text-[13px] text-[#EF4444] font-medium leading-relaxed">
                 {error}
               </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Interactive Segmented Role Toggle */}
-            <div>
-              <label className="block text-[14px] font-semibold text-[#111827] dark:text-white mb-2">
-                I am logging in as
-              </label>
-              <div className="flex p-1.5 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-[18px]">
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, role: "Job Seeker" })}
-                  className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 rounded-[14px] text-[15px] font-medium transition-all ${
-                    form.role === "Job Seeker"
-                      ? "bg-white dark:bg-[#111827] text-[#2F80ED] dark:text-[#56CCF2] shadow-[0_2px_10px_rgb(0,0,0,0.04)] font-semibold border border-[#E5E7EB] dark:border-[#374151]"
-                      : "text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white"
-                  }`}
-                >
-                  <User className="w-4 h-4" />
-                  <span>Job Seeker</span>
-                </button>
+          {/* Interactive Segmented Role Toggle */}
+          <div className="mb-4">
+            <label className="block text-[13px] font-semibold text-[#111827] dark:text-white mb-1.5">
+              I am logging in as
+            </label>
+            <div className="flex p-1 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-[16px]">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, role: "Job Seeker" })}
+                className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-[12px] text-[14px] font-medium transition-all ${
+                  form.role === "Job Seeker"
+                    ? "bg-white dark:bg-[#111827] text-[#2F80ED] dark:text-[#56CCF2] shadow-[0_2px_10px_rgb(0,0,0,0.04)] font-semibold border border-[#E5E7EB] dark:border-[#374151]"
+                    : "text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white"
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span>Job Seeker</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, role: "Employer" })}
-                  className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 rounded-[14px] text-[15px] font-medium transition-all ${
-                    form.role === "Employer"
-                      ? "bg-white dark:bg-[#111827] text-[#2F80ED] dark:text-[#56CCF2] shadow-[0_2px_10px_rgb(0,0,0,0.04)] font-semibold border border-[#E5E7EB] dark:border-[#374151]"
-                      : "text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white"
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4" />
-                  <span>Employer</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, role: "Employer" })}
+                className={`flex-1 py-2.5 px-3 flex items-center justify-center gap-2 rounded-[12px] text-[14px] font-medium transition-all ${
+                  form.role === "Employer"
+                    ? "bg-white dark:bg-[#111827] text-[#2F80ED] dark:text-[#56CCF2] shadow-[0_2px_10px_rgb(0,0,0,0.04)] font-semibold border border-[#E5E7EB] dark:border-[#374151]"
+                    : "text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white"
+                }`}
+              >
+                <Briefcase className="w-4 h-4" />
+                <span>Employer</span>
+              </button>
             </div>
+          </div>
 
+          {/* Email / Password Form First */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
             {/* Email Field */}
             <div>
-              <label className="block text-[14px] font-semibold text-[#111827] dark:text-white mb-2">
+              <label className="block text-[13px] font-semibold text-[#111827] dark:text-white mb-1.5">
                 Email Address
               </label>
               <div className="relative flex items-center">
-                <Mail className="w-5 h-5 text-[#9CA3AF] absolute left-4 pointer-events-none" />
+                <Mail className="w-4 h-4 text-[#9CA3AF] absolute left-3.5 pointer-events-none" />
                 <input
                   type="email"
                   placeholder="name@company.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-[18px] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/40 focus:border-[#2F80ED] text-[#111827] dark:text-white placeholder-[#9CA3AF] text-[16px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] transition-all"
+                  className="w-full pl-11 pr-3.5 py-3 bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-[14px] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/40 focus:border-[#2F80ED] text-[#111827] dark:text-white placeholder-[#9CA3AF] text-[15px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] transition-all"
                   required
                 />
               </div>
@@ -125,34 +135,34 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-[14px] font-semibold text-[#111827] dark:text-white">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#111827] dark:text-white">
                   Password
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-[14px] font-semibold text-[#2F80ED] dark:text-[#56CCF2] hover:text-[#2563EB] transition-colors"
+                  className="text-[13px] font-semibold text-[#2F80ED] dark:text-[#56CCF2] hover:text-[#2563EB] transition-colors"
                 >
                   Forgot password?
                 </Link>
               </div>
               <div className="relative flex items-center">
-                <Lock className="w-5 h-5 text-[#9CA3AF] absolute left-4 pointer-events-none" />
+                <Lock className="w-4 h-4 text-[#9CA3AF] absolute left-3.5 pointer-events-none" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full pl-12 pr-12 py-3.5 bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-[18px] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/40 focus:border-[#2F80ED] text-[#111827] dark:text-white placeholder-[#9CA3AF] text-[16px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] transition-all"
+                  className="w-full pl-11 pr-11 py-3 bg-white dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] rounded-[14px] focus:outline-none focus:ring-2 focus:ring-[#2F80ED]/40 focus:border-[#2F80ED] text-[#111827] dark:text-white placeholder-[#9CA3AF] text-[15px] shadow-[0_2px_10px_rgb(0,0,0,0.02)] transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 p-1 rounded-md text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white hover:bg-[#F7FAFC] dark:hover:bg-[#374151] transition-all focus:outline-none"
+                  className="absolute right-3.5 p-1 rounded-md text-[#9CA3AF] hover:text-[#111827] dark:hover:text-white hover:bg-[#F7FAFC] dark:hover:bg-[#374151] transition-all focus:outline-none"
                   aria-label="Toggle password visibility"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -161,29 +171,54 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-4 px-6 rounded-full font-semibold text-[16px] text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] shadow-[0_4px_14px_0_rgba(47,128,237,0.39)] hover:shadow-[0_6px_20px_rgba(47,128,237,0.23)] focus:outline-none focus:ring-2 focus:ring-[#2F80ED] focus:ring-offset-2 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full mt-1 py-3.5 px-6 rounded-full font-semibold text-[15px] text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] shadow-[0_4px_14px_0_rgba(47,128,237,0.39)] hover:shadow-[0_6px_20px_rgba(47,128,237,0.23)] focus:outline-none focus:ring-2 focus:ring-[#2F80ED] focus:ring-offset-2 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Authenticating...</span>
                 </>
               ) : (
                 <>
                   <span>Sign In</span>
-                  <LogInIcon className="w-5 h-5" />
+                  <LogInIcon className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
           {/* Divider */}
-          <div className="relative my-8">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[#E5E7EB] dark:border-[#1F2937]" />
             </div>
-            <div className="relative flex justify-center text-[14px]">
-              <span className="px-4 bg-white dark:bg-[#111827] text-[#6B7280] dark:text-[#9CA3AF]">
+            <div className="relative flex justify-center text-[13px]">
+              <span className="px-3 bg-white dark:bg-[#111827] text-[#6B7280] dark:text-[#9CA3AF]">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          {/* Google Sign In Button Second */}
+          <div className="flex justify-center mb-4 [&>div]:w-full [&>div>iframe]:w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="outline"
+              size="large"
+              text="continue_with"
+              shape="pill"
+              width="100%"
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#E5E7EB] dark:border-[#1F2937]" />
+            </div>
+            <div className="relative flex justify-center text-[13px]">
+              <span className="px-3 bg-white dark:bg-[#111827] text-[#6B7280] dark:text-[#9CA3AF]">
                 New to Jobnique?
               </span>
             </div>
@@ -192,7 +227,7 @@ const Login = () => {
           {/* Register Callout */}
           <Link
             to="/register"
-            className="w-full py-3.5 px-6 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] hover:bg-[#EDF5FF] dark:hover:bg-[#374151] hover:border-[#2F80ED]/30 text-[#111827] dark:text-white hover:text-[#2F80ED] dark:hover:text-[#56CCF2] rounded-full text-[15px] font-semibold transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
+            className="w-full py-3 px-6 bg-[#F7FAFC] dark:bg-[#1F2937] border border-[#E5E7EB] dark:border-[#374151] hover:bg-[#EDF5FF] dark:hover:bg-[#374151] hover:border-[#2F80ED]/30 text-[#111827] dark:text-white hover:text-[#2F80ED] dark:hover:text-[#56CCF2] rounded-full text-[14px] font-semibold transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
           >
             <span>Create a new account</span>
             <ArrowRight className="w-4 h-4 text-[#9CA3AF] group-hover:translate-x-1 transition-transform" />
@@ -200,7 +235,7 @@ const Login = () => {
         </div>
 
         {/* Security Footer Note */}
-        <div className="flex items-center justify-center gap-2 mt-8 text-[14px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">
+        <div className="flex items-center justify-center gap-2 mt-4 text-[13px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">
           <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
           <span>Encrypted 256-bit secure authentication</span>
         </div>

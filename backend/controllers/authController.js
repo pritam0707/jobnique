@@ -2,8 +2,11 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const pdfParse = require("pdf-parse");
+const { OAuth2Client } = require("google-auth-library");
 const { User, Job } = require("../models");
 const sendToken = require("../utils/sendToken");
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Helper function to safely parse savedJobIds and fetch populated Job objects
 const getPopulatedSavedJobs = async (userSavedJobs) => {
@@ -21,7 +24,6 @@ const getPopulatedSavedJobs = async (userSavedJobs) => {
     return [];
   }
 
-  // Clean IDs of accidental extra quotes or whitespace
   const cleanIds = savedJobIds
     .map((item) => {
       let strId = typeof item === "object" && item !== null ? item.id || item._id : item;
@@ -94,6 +96,51 @@ exports.login = async (req, res, next) => {
   }
 };
 
+// ==========================================
+// Google Login / Register Handler
+// ==========================================
+exports.googleLogin = async (req, res, next) => {
+  try {
+    const { token, role } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Google token is missing" });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const { email, name } = ticket.getPayload();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Google authentication failed: No email returned" });
+    }
+
+    let user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: crypto.randomBytes(32).toString("hex"),
+        role: role || "Job Seeker",
+      });
+    } else {
+      if (role && user.role.toLowerCase() !== role.toLowerCase()) {
+        user.role = role;
+        await user.save();
+      }
+    }
+
+    await sendToken(user, 200, res, "Google authentication successful");
+  } catch (error) {
+    console.error("Google Auth Error:", error.message);
+    return res.status(400).json({ success: false, message: "Google token verification failed" });
+  }
+};
+
 exports.logout = async (req, res, next) => {
   try {
     res
@@ -105,96 +152,57 @@ exports.logout = async (req, res, next) => {
   }
 };
 
-// ==========================================
-// Forgot Password Handler
-// ==========================================
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter your email address",
-      });
+      return res.status(400).json({ success: false, message: "Please enter your email address" });
     }
 
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "No account registered with this email address",
-      });
+      return res.status(404).json({ success: false, message: "No account registered with this email address" });
     }
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(20).toString("hex");
-
-    // Hash token and set to resetPasswordToken field on user
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
 
     user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // Token expires in 15 mins
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
     await user.save();
 
-    // Construct Reset URL
     const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
-
-    console.log("-----------------------------------------");
-    console.log(`PASSWORD RESET URL for ${user.email}:`);
-    console.log(resetUrl);
-    console.log("-----------------------------------------");
 
     res.status(200).json({
       success: true,
       message: `Password reset link has been generated and sent to ${user.email}`,
-      resetUrl, // Pass URL back for easy local testing/debugging
+      resetUrl,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// ==========================================
-// Reset Password Handler
-// ==========================================
 exports.resetPassword = async (req, res, next) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
 
     if (!password) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide a new password",
-      });
+      return res.status(400).json({ success: false, message: "Please provide a new password" });
     }
 
-    // Hash token passed in URL params to match DB record
-    const resetPasswordToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+    const resetPasswordToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    const user = await User.findOne({
-      where: {
-        resetPasswordToken,
-      },
-    });
+    const user = await User.findOne({ where: { resetPasswordToken } });
 
     if (!user || user.resetPasswordExpire < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "Password reset token is invalid or has expired",
-      });
+      return res.status(400).json({ success: false, message: "Password reset token is invalid or has expired" });
     }
 
-    // Set new password
     user.password = password;
     user.resetPasswordToken = null;
     user.resetPasswordExpire = null;
@@ -257,10 +265,7 @@ exports.uploadResume = async (req, res, next) => {
     const ext = path.extname(file.name).toLowerCase();
 
     if (!allowedExt.includes(ext)) {
-      return res.status(400).json({
-        success: false,
-        message: "Only PDF or TXT resumes are supported",
-      });
+      return res.status(400).json({ success: false, message: "Only PDF or TXT resumes are supported" });
     }
 
     const uploadsDir = path.join(__dirname, "..", "uploads", "resumes");
@@ -325,10 +330,7 @@ exports.deleteResume = async (req, res, next) => {
 
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Resume deleted successfully",
-    });
+    res.status(200).json({ success: true, message: "Resume deleted successfully" });
   } catch (error) {
     next(error);
   }
@@ -347,10 +349,7 @@ exports.getUserProfile = async (req, res, next) => {
     const userData = user.toJSON();
     userData.savedJobs = await getPopulatedSavedJobs(user.savedJobs);
 
-    res.status(200).json({
-      success: true,
-      user: userData,
-    });
+    res.status(200).json({ success: true, user: userData });
   } catch (error) {
     next(error);
   }
