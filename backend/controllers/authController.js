@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const pdfParse = require("pdf-parse");
 const { User, Job } = require("../models");
 const sendToken = require("../utils/sendToken");
@@ -59,7 +60,6 @@ exports.register = async (req, res, next) => {
       designation: designation || null,
     });
 
-    // Pass the Sequelize 'user' model instance directly so user.getJWTToken() works
     await sendToken(user, 201, res, "User registered successfully");
   } catch (error) {
     next(error);
@@ -84,11 +84,10 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    if (user.role !== role) {
+    if (user.role.toLowerCase() !== role.toLowerCase()) {
       return res.status(401).json({ success: false, message: `No ${role} account found with this email` });
     }
 
-    // Pass the Sequelize 'user' model instance directly so user.getJWTToken() works
     await sendToken(user, 200, res, "Login successful");
   } catch (error) {
     next(error);
@@ -106,7 +105,108 @@ exports.logout = async (req, res, next) => {
   }
 };
 
-// Updated to attach populated savedJobs object array to req.user for Redux sync
+// ==========================================
+// Forgot Password Handler
+// ==========================================
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter your email address",
+      });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No account registered with this email address",
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+
+    // Hash token and set to resetPasswordToken field on user
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // Token expires in 15 mins
+
+    await user.save();
+
+    // Construct Reset URL
+    const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+
+    console.log("-----------------------------------------");
+    console.log(`PASSWORD RESET URL for ${user.email}:`);
+    console.log(resetUrl);
+    console.log("-----------------------------------------");
+
+    res.status(200).json({
+      success: true,
+      message: `Password reset link has been generated and sent to ${user.email}`,
+      resetUrl, // Pass URL back for easy local testing/debugging
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==========================================
+// Reset Password Handler
+// ==========================================
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a new password",
+      });
+    }
+
+    // Hash token passed in URL params to match DB record
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken,
+      },
+    });
+
+    if (!user || user.resetPasswordExpire < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "Password reset token is invalid or has expired",
+      });
+    }
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpire = null;
+
+    await user.save();
+
+    await sendToken(user, 200, res, "Password reset successful! You are now logged in.");
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getCurrentUser = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -126,7 +226,6 @@ exports.getCurrentUser = async (req, res, next) => {
   }
 };
 
-// Profile update handler saves companyName & designation and returns populated savedJobs
 exports.updateProfile = async (req, res, next) => {
   try {
     const { name, phone, companyName, designation } = req.body;
@@ -147,7 +246,6 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-// Stores resume locally and extracts plain text for AI processing
 exports.uploadResume = async (req, res, next) => {
   try {
     if (!req.files || !req.files.resume) {
@@ -189,7 +287,7 @@ exports.uploadResume = async (req, res, next) => {
     }
 
     req.user.resumeUrl = `/uploads/resumes/${fileName}`;
-    req.user.resumeText = resumeText.slice(0, 20000); // Guard against huge files
+    req.user.resumeText = resumeText.slice(0, 20000);
     await req.user.save();
 
     res.status(200).json({
@@ -202,7 +300,6 @@ exports.uploadResume = async (req, res, next) => {
   }
 };
 
-// Delete user's active resume file and clear DB references
 exports.deleteResume = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id);
@@ -211,7 +308,6 @@ exports.deleteResume = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "No active resume found to delete" });
     }
 
-    // Delete local physical file if present
     if (user.resumeUrl.startsWith("/uploads/")) {
       const filePath = path.join(__dirname, "..", user.resumeUrl);
       if (fs.existsSync(filePath)) {
@@ -223,7 +319,6 @@ exports.deleteResume = async (req, res, next) => {
       }
     }
 
-    // Reset database fields
     user.resumeUrl = null;
     user.resumePublicId = null;
     user.resumeText = null;

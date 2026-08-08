@@ -7,6 +7,12 @@ export const registerUser = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await api.post("/auth/register", data);
+      
+      // Store token if returned in response body
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+      
       return res.data.user;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Registration failed");
@@ -20,6 +26,12 @@ export const loginUser = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const res = await api.post("/auth/login", data);
+      
+      // Store token if returned in response body
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+      
       return res.data.user;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
@@ -31,19 +43,21 @@ export const loginUser = createAsyncThunk(
 export const fetchCurrentUser = createAsyncThunk(
   "auth/me",
   async (_, { rejectWithValue }) => {
+    // 🛑 GUARD: Check if token exists before firing API request
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return rejectWithValue("No authentication token found");
+    }
+
     try {
-      let res;
-      try {
-        res = await api.get("/auth/me");
-      } catch (err) {
-        if (err.response?.status === 404) {
-          res = await api.get("/auth/profile");
-        } else {
-          throw err;
-        }
-      }
+      const res = await api.get("/auth/me");
       return res.data.user;
     } catch (err) {
+      // If token is invalid or expired, clean up local storage
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+      }
       return rejectWithValue(err.response?.data?.message || "Failed to fetch user");
     }
   }
@@ -57,18 +71,7 @@ export const toggleSaveJob = createAsyncThunk(
       // Strips accidental quotes or spaces from incoming ID string
       const cleanJobId = String(jobId).replace(/^["']|["']$/g, "").trim();
 
-      let res;
-      try {
-        // Matches main server route prefix: app.use("/api/v1/jobs", jobRoutes)
-        res = await api.post(`/jobs/save/${cleanJobId}`);
-      } catch (err) {
-        // Fallback retry for singular '/job/save/'
-        if (err.response?.status === 404) {
-          res = await api.post(`/job/save/${cleanJobId}`);
-        } else {
-          throw err;
-        }
-      }
+      const res = await api.post(`/jobs/save/${cleanJobId}`);
 
       // Returns populated savedJobs array directly from backend controller
       return res.data.savedJobs;
@@ -83,7 +86,10 @@ export const logoutUser = createAsyncThunk("auth/logout", async () => {
   try {
     await api.get("/auth/logout");
   } catch (err) {
-    console.warn("Logout endpoint error:", err.message);
+    console.warn("Logout endpoint warning:", err.message);
+  } finally {
+    // Always clear token from storage on logout
+    localStorage.removeItem("token");
   }
   return null;
 });

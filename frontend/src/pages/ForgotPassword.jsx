@@ -1,3 +1,4 @@
+// src/pages/ForgotPassword.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
@@ -24,16 +25,30 @@ const ForgotPassword = () => {
     setError("");
     setSuccessMessage("");
 
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await api.post("/auth/forgot-password", { email });
+
       setSuccessMessage(
         res.data?.message || "Password reset link has been sent to your email address."
       );
       setEmail("");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to send reset email. Please check your email address."
-      );
+      console.error("Forgot Password Error:", err);
+      
+      if (err.response?.status === 404) {
+        setError("API Endpoint not found. Please ensure backend server is restarted.");
+      } else {
+        setError(
+          err.response?.data?.message ||
+            "Failed to send reset email. Please check your email address and try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -49,7 +64,7 @@ const ForgotPassword = () => {
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <span className="text-[24px] font-bold tracking-tight text-[#111827] dark:text-white">
-            Jobnique
+            Jobnique<span className="text-[#2F80ED]">.</span>
           </span>
         </Link>
         <h1 className="text-[32px] font-bold tracking-tight text-[#111827] dark:text-white mb-2">

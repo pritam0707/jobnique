@@ -107,6 +107,16 @@ const Home = () => {
     }
   };
 
+  // Helper handler for protected links in footer or navigation
+  const handleProtectedLink = (e, targetPath) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: targetPath } });
+    } else {
+      navigate(targetPath);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-[#F7FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-[#F3F4F6] selection:bg-[#56CCF2]/30 selection:text-[#111827] dark:selection:text-[#F3F4F6] overflow-x-hidden font-sans transition-colors duration-300 flex flex-col justify-between">
       
@@ -518,31 +528,27 @@ const Home = () => {
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">For JobSeeker</h4>
               <ul className="space-y-2.5 text-xs">
                 <li>
-                  {isAuthenticated ? (
-                    <span className="text-slate-600 cursor-not-allowed select-none">Browse Jobs</span>
-                  ) : (
-                    <Link to="/jobs" className="hover:text-indigo-400 transition-colors">
-                      Browse Jobs
-                    </Link>
-                  )}
+                  <Link to="/jobs" className="hover:text-indigo-400 transition-colors">
+                    Browse Jobs
+                  </Link>
                 </li>
                 <li>
-                  {isAuthenticated ? (
-                    <span className="text-slate-600 cursor-not-allowed select-none">Browse Categories</span>
-                  ) : (
-                    <Link to="/categories" className="hover:text-indigo-400 transition-colors">
-                      Browse Categories
-                    </Link>
-                  )}
+                  <a
+                    href="/categories"
+                    onClick={(e) => handleProtectedLink(e, "/categories")}
+                    className="hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Browse Categories
+                  </a>
                 </li>
                 <li>
-                  {isAuthenticated ? (
-                    <span className="text-slate-600 cursor-not-allowed select-none">Candidate Dashboard</span>
-                  ) : (
-                    <Link to="/jobseeker/dashboard" className="hover:text-indigo-400 transition-colors">
-                      Candidate Dashboard
-                    </Link>
-                  )}
+                  <a
+                    href="/jobseeker/dashboard"
+                    onClick={(e) => handleProtectedLink(e, "/jobseeker/dashboard")}
+                    className="hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Candidate Dashboard
+                  </a>
                 </li>
               </ul>
             </div>
@@ -552,36 +558,36 @@ const Home = () => {
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">For Employers</h4>
               <ul className="space-y-2.5 text-xs">
                 <li>
-                  {isAuthenticated ? (
-                    <span className="text-slate-600 cursor-not-allowed select-none">Post a Job</span>
-                  ) : (
-                    <Link to="/post-job" className="hover:text-indigo-400 transition-colors">
-                      Post a Job
-                    </Link>
-                  )}
+                  <a
+                    href="/post-job"
+                    onClick={(e) => handleProtectedLink(e, "/post-job")}
+                    className="hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Post a Job
+                  </a>
                 </li>
                 <li>
-                  {isAuthenticated ? (
-                    <span className="text-slate-600 cursor-not-allowed select-none">Pricing Plans</span>
-                  ) : (
-                    <Link to="/pricing" className="hover:text-indigo-400 transition-colors">
-                      Pricing Plans
-                    </Link>
-                  )}
+                  <a
+                    href="/pricing"
+                    onClick={(e) => handleProtectedLink(e, "/pricing")}
+                    className="hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Pricing Plans
+                  </a>
                 </li>
                 <li>
-                  {isAuthenticated ? (
-                    <span className="text-slate-600 cursor-not-allowed select-none">Employer Resources</span>
-                  ) : (
-                    <Link to="/employer-resources" className="hover:text-indigo-400 transition-colors">
-                      Employer Resources
-                    </Link>
-                  )}
+                  <a
+                    href="/employer-resources"
+                    onClick={(e) => handleProtectedLink(e, "/employer-resources")}
+                    className="hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Employer Resources
+                  </a>
                 </li>
               </ul>
             </div>
 
-            {/* Support & Company - Always active */}
+            {/* Support & Company - Always public */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">Support & Company</h4>
               <ul className="space-y-2.5 text-xs">
@@ -607,7 +613,7 @@ const Home = () => {
 
           {/* Bottom Bar */}
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
-            <p>© 2026 Jobnique Inc. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Jobnique Inc. All rights reserved.</p>
             <div className="flex items-center gap-1.5 hover:text-slate-300 transition-colors cursor-pointer">
               <Globe className="w-4 h-4" />
               <span>English (US)</span>

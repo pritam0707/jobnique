@@ -7,8 +7,14 @@ const { Application, Job, User } = require("../models");
 // ==========================================
 exports.applyToJob = async (req, res, next) => {
   try {
-    if (req.user.role !== "Job Seeker") {
-      return res.status(403).json({ success: false, message: "Only job seekers can apply to jobs" });
+    const userRole = req.user.role ? req.user.role.toLowerCase().replace(/\s+/g, "") : "";
+
+    // Allow any jobseeker role format (e.g., "Job Seeker", "Jobseeker", "Candidate")
+    if (userRole === "employer") {
+      return res.status(403).json({
+        success: false,
+        message: "Employers are not allowed to apply for jobs",
+      });
     }
 
     const { jobId } = req.params;
@@ -50,6 +56,19 @@ exports.applyToJob = async (req, res, next) => {
       resumeUrl = `/uploads/resumes/${uniqueFileName}`;
     }
 
+    // Fallback to resume stored in user profile
+    if (!resumeUrl && req.user.resumeUrl) {
+      resumeUrl = req.user.resumeUrl;
+    }
+
+    // Validate that a resume exists
+    if (!resumeUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload a resume or attach one to your profile before applying.",
+      });
+    }
+
     // 2. Validate Job Existence
     const job = await Job.findByPk(jobId);
     if (!job) {
@@ -61,15 +80,18 @@ exports.applyToJob = async (req, res, next) => {
       where: { jobId, applicantId: req.user.id },
     });
     if (existing) {
-      return res.status(400).json({ success: false, message: "You have already applied to this job" });
+      return res.status(400).json({
+        success: false,
+        message: "You have already applied to this job",
+      });
     }
 
     // 4. Create Application record
     const application = await Application.create({
       jobId,
       applicantId: req.user.id,
-      resumeUrl: resumeUrl || req.user.resumeUrl || null,
-      coverLetter,
+      resumeUrl,
+      coverLetter: coverLetter || "",
       status: "Pending",
     });
 
@@ -94,7 +116,11 @@ exports.getMyApplications = async (req, res, next) => {
       order: [["createdAt", "DESC"]],
     });
 
-    res.status(200).json({ success: true, count: applications.length, applications });
+    res.status(200).json({
+      success: true,
+      count: applications.length,
+      applications,
+    });
   } catch (error) {
     next(error);
   }
@@ -112,17 +138,31 @@ exports.getJobApplications = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
 
-    if (String(job.postedBy) !== String(req.user.id)) {
-      return res.status(403).json({ success: false, message: "Not authorized to view these applications" });
+    const jobOwnerId = job.postedBy || job.employerId || job.userId;
+    if (String(jobOwnerId) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view applications for this job",
+      });
     }
 
     const applications = await Application.findAll({
       where: { jobId },
-      include: [{ model: User, as: "applicant", attributes: ["id", "name", "email", "phone", "resumeUrl"] }],
+      include: [
+        {
+          model: User,
+          as: "applicant",
+          attributes: ["id", "name", "email", "phone", "resumeUrl"],
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
 
-    res.status(200).json({ success: true, count: applications.length, applications });
+    res.status(200).json({
+      success: true,
+      count: applications.length,
+      applications,
+    });
   } catch (error) {
     next(error);
   }
@@ -139,7 +179,10 @@ exports.updateApplicationStatus = async (req, res, next) => {
     const validStatuses = ["Pending", "Reviewed", "Accepted", "Rejected", "Hired"];
 
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status value" });
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status value. Must be one of: ${validStatuses.join(", ")}`,
+      });
     }
 
     const application = await Application.findByPk(appId, {
@@ -150,14 +193,24 @@ exports.updateApplicationStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    if (application.job && String(application.job.postedBy) !== String(req.user.id)) {
-      return res.status(403).json({ success: false, message: "Not authorized to update this application" });
+    const jobOwnerId =
+      application.job?.postedBy || application.job?.employerId || application.job?.userId;
+
+    if (jobOwnerId && String(jobOwnerId) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this application",
+      });
     }
 
     application.status = status;
     await application.save();
 
-    res.status(200).json({ success: true, message: `Application status updated to ${status}`, application });
+    res.status(200).json({
+      success: true,
+      message: `Application status updated to ${status}`,
+      application,
+    });
   } catch (error) {
     next(error);
   }

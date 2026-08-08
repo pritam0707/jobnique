@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// Updated fallback URL to match Express server (Port 4000 & /api/v1)
+// Fallback URL matching Express server (Port 4000 & /api/v1)
 const BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
 
@@ -12,13 +12,19 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach Authorization Bearer token if present
+// Request Interceptor: Attach Authorization Bearer token & handle FormData
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Allow browser to auto-set boundary for FormData (e.g., resume uploads)
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -29,8 +35,17 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear token if session is expired/invalid
+      // List of public pages where token cleanup shouldn't interrupt flow
+      const publicPaths = ["/", "/login", "/register", "/forgot-password", "/jobs"];
+      const isPublicPath = publicPaths.includes(window.location.pathname);
+
+      // Clean up local storage if token expired
       localStorage.removeItem("token");
+
+      // Optional: Auto-redirect only if user was trying to perform a protected action
+      if (!isPublicPath && !error.config?.url?.includes("/auth/me")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

@@ -34,12 +34,12 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    // ADDED: Company Name for Employers
+    // Company Name for Employers
     companyName: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    // ADDED: Designation / Job Title for Employers
+    // Designation / Job Title for Employers
     designation: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -62,7 +62,17 @@ const User = sequelize.define(
       allowNull: true,
     },
     
-    // ADDED: Saved Jobs column with auto JSON stringification/parsing
+    // ADDED: Fields for Password Reset Flow
+    resetPasswordToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    resetPasswordExpire: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    // Saved Jobs column with auto JSON stringification/parsing
     savedJobs: {
       type: DataTypes.TEXT,
       allowNull: true,
