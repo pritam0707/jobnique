@@ -1,4 +1,8 @@
-const { Job, User } = require("../models");
+const { Job, User, Application } = require("../models");
+
+// ==========================================
+// Helper Functions
+// ==========================================
 
 // Robust helper to parse savedJobs regardless of DB storage format
 const parseSavedJobIds = (rawInput) => {
@@ -47,15 +51,27 @@ const getPopulatedSavedJobs = async (userSavedJobs) => {
 
   return await Job.findAll({
     where: { id: cleanIds },
-    include: [{ model: User, as: "employer", attributes: ["id", "name", "email", "companyName", "designation"] }],
+    include: [
+      {
+        model: User,
+        as: "employer",
+        attributes: ["id", "name", "email", "companyName", "designation"],
+      },
+    ],
   });
 };
+
+// ==========================================
+// Job Controller Endpoints
+// ==========================================
 
 // Post a new job posting (Employers only)
 exports.postJob = async (req, res, next) => {
   try {
     if (req.user.role !== "Employer") {
-      return res.status(403).json({ success: false, message: "Only employers can post jobs" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Only employers can post jobs" });
     }
 
     const {
@@ -71,7 +87,9 @@ exports.postJob = async (req, res, next) => {
     } = req.body;
 
     if (!title || !description || !category || !country || !city) {
-      return res.status(400).json({ success: false, message: "Please provide all required job details" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide all required job details" });
     }
 
     const hasFixed = Boolean(fixedSalary);
@@ -95,6 +113,9 @@ exports.postJob = async (req, res, next) => {
       salaryFrom: salaryFrom || null,
       salaryTo: salaryTo || null,
       postedBy: req.user.id,
+      status: "Active",
+      isOpen: true,
+      expired: false,
     });
 
     res.status(201).json({ success: true, message: "Job posted successfully", job });
@@ -109,11 +130,11 @@ exports.getAllJobs = async (req, res, next) => {
     const jobs = await Job.findAll({
       where: { expired: false },
       include: [
-        { 
-          model: User, 
-          as: "employer", 
-          attributes: ["id", "name", "email", "companyName", "designation"] 
-        }
+        {
+          model: User,
+          as: "employer",
+          attributes: ["id", "name", "email", "companyName", "designation"],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -129,11 +150,11 @@ exports.getSingleJob = async (req, res, next) => {
   try {
     const job = await Job.findByPk(req.params.id, {
       include: [
-        { 
-          model: User, 
-          as: "employer", 
-          attributes: ["id", "name", "email", "companyName", "designation"] 
-        }
+        {
+          model: User,
+          as: "employer",
+          attributes: ["id", "name", "email", "companyName", "designation"],
+        },
       ],
     });
 
@@ -147,17 +168,28 @@ exports.getSingleJob = async (req, res, next) => {
   }
 };
 
-// Get all jobs posted by the currently logged-in employer
+// Get all jobs posted by the currently logged-in employer (WITH APPLICATIONS & APPLICANTS INCLUDED)
 exports.getEmployerJobs = async (req, res, next) => {
   try {
     const jobs = await Job.findAll({
       where: { postedBy: req.user.id },
       include: [
-        { 
-          model: User, 
-          as: "employer", 
-          attributes: ["id", "name", "email", "companyName", "designation"] 
-        }
+        {
+          model: User,
+          as: "employer",
+          attributes: ["id", "name", "email", "companyName", "designation"],
+        },
+        {
+          model: Application,
+          as: "applications", // 👈 Populates applications array on each job
+          include: [
+            {
+              model: User,
+              as: "applicant", // 👈 Populates candidate details (Name, Email, Phone, Resume)
+              attributes: ["id", "name", "email", "phone", "resumeUrl"],
+            },
+          ],
+        },
       ],
       order: [["createdAt", "DESC"]],
     });
@@ -167,17 +199,23 @@ exports.getEmployerJobs = async (req, res, next) => {
       const jobJson = job.toJSON();
       return {
         ...jobJson,
-        companyName: jobJson.companyName || jobJson.employer?.companyName || req.user.companyName || "Your Company",
+        companyName:
+          jobJson.companyName ||
+          jobJson.employer?.companyName ||
+          req.user.companyName ||
+          "Your Company",
       };
     });
 
-    res.status(200).json({ success: true, count: formattedJobs.length, jobs: formattedJobs });
+    res
+      .status(200)
+      .json({ success: true, count: formattedJobs.length, jobs: formattedJobs });
   } catch (error) {
     next(error);
   }
 };
 
-// Update an existing job listing
+// Update an existing job listing or toggle status
 exports.updateJob = async (req, res, next) => {
   try {
     const job = await Job.findByPk(req.params.id);
@@ -187,12 +225,29 @@ exports.updateJob = async (req, res, next) => {
     }
 
     if (String(job.postedBy) !== String(req.user.id)) {
-      return res.status(403).json({ success: false, message: "Not authorized to update this job" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized to update this job" });
     }
 
-    await job.update(req.body);
+    // Automatically sync status, isOpen, and expired fields if any are toggled
+    const updatePayload = { ...req.body };
 
-    res.status(200).json({ success: true, message: "Job updated successfully", job });
+    if (req.body.status === "Inactive" || req.body.isOpen === false) {
+      updatePayload.status = "Inactive";
+      updatePayload.isOpen = false;
+      updatePayload.expired = true;
+    } else if (req.body.status === "Active" || req.body.isOpen === true) {
+      updatePayload.status = "Active";
+      updatePayload.isOpen = true;
+      updatePayload.expired = false;
+    }
+
+    await job.update(updatePayload);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Job updated successfully", job });
   } catch (error) {
     next(error);
   }
@@ -208,7 +263,9 @@ exports.deleteJob = async (req, res, next) => {
     }
 
     if (String(job.postedBy) !== String(req.user.id)) {
-      return res.status(403).json({ success: false, message: "Not authorized to delete this job" });
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorized to delete this job" });
     }
 
     await job.destroy();
@@ -229,7 +286,9 @@ exports.toggleSaveJob = async (req, res, next) => {
     }
 
     // Clean and normalize target ID from req.params.id
-    const targetJobId = String(req.params.id).replace(/^["']|["']$/g, "").trim();
+    const targetJobId = String(req.params.id)
+      .replace(/^["']|["']$/g, "")
+      .trim();
 
     // 1. Clean and parse existing IDs
     const existingIds = parseSavedJobIds(user.savedJobs);
@@ -247,23 +306,24 @@ exports.toggleSaveJob = async (req, res, next) => {
     }
 
     // 3. Format payload based on column behavior
-    const isJsonColumn = Array.isArray(user.savedJobs) || typeof user.savedJobs === "object";
-    const valueToSave = isJsonColumn && user.savedJobs !== null
-      ? updatedSavedIds
-      : JSON.stringify(updatedSavedIds);
+    const isJsonColumn =
+      Array.isArray(user.savedJobs) || typeof user.savedJobs === "object";
+    const valueToSave =
+      isJsonColumn && user.savedJobs !== null
+        ? updatedSavedIds
+        : JSON.stringify(updatedSavedIds);
 
     // 4. Force direct DB update to prevent Sequelize instance change-tracking skip on unsave
-    await User.update(
-      { savedJobs: valueToSave },
-      { where: { id: req.user.id } }
-    );
+    await User.update({ savedJobs: valueToSave }, { where: { id: req.user.id } });
 
     // 5. Retrieve populated job models for Redux/UI state sync
     const populatedSavedJobs = await getPopulatedSavedJobs(updatedSavedIds);
 
     return res.status(200).json({
       success: true,
-      message: isAlreadySaved ? "Job removed from saved items" : "Job saved successfully",
+      message: isAlreadySaved
+        ? "Job removed from saved items"
+        : "Job saved successfully",
       savedJobs: populatedSavedJobs,
     });
   } catch (error) {

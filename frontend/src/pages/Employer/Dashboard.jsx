@@ -21,10 +21,26 @@ import {
   Mail,
   MapPin,
   Building2,
-  ExternalLink
+  ToggleLeft,
+  ToggleRight,
+  Phone,
+  FileText,
+  ExternalLink,
+  MessageSquare
 } from "lucide-react";
 import MyApplicationsPanel from "../JobSeeker/MyApplicationsPanel";
 import AIRecommendationsPanel from "../JobSeeker/AIRecommendationsPanel";
+
+// Helper to point relative file paths to Express port 4000 for PDF viewing
+const formatResumeUrl = (url) => {
+  if (!url) return "#";
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  const backendBase = "http://localhost:4000";
+  const cleanPath = url.startsWith("/") ? url : `/${url}`;
+  return `${backendBase}${cleanPath}`;
+};
 
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -37,6 +53,9 @@ const Dashboard = () => {
   const [jobToDelete, setJobToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // ✅ Contact Candidate Modal State
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+
   // Raw Data & Stats State
   const [jobsData, setJobsData] = useState([]);
   const [stats, setStats] = useState({
@@ -48,6 +67,20 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(isEmployer);
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Per-job status toggle loading state
+  const [togglingJobId, setTogglingJobId] = useState(null);
+
+  // Helper to determine if a job is currently active/open
+  const isJobActive = (job) => {
+    if (job?.status) {
+      return job.status.toLowerCase() === "active";
+    }
+    if (job?.expired !== undefined) {
+      return !job.expired;
+    }
+    return job?.isOpen === true;
+  };
 
   // Fetch Employer Jobs and calculate statistics
   const fetchEmployerData = async () => {
@@ -64,7 +97,7 @@ const Dashboard = () => {
       let hiredCount = 0;
 
       jobs.forEach((job) => {
-        if (job.status === "Active" || job.isOpen !== false) {
+        if (isJobActive(job)) {
           activeCount += 1;
         }
 
@@ -111,6 +144,23 @@ const Dashboard = () => {
     }
   };
 
+  // Toggle a job between Active (open) and Inactive (closed)
+  const handleToggleJobStatus = async (jobId, currentlyActive) => {
+    try {
+      setTogglingJobId(jobId);
+      await api.put(`/jobs/status/${jobId}`, {
+        status: !currentlyActive ? "Active" : "Inactive",
+        isOpen: !currentlyActive,
+        expired: currentlyActive,
+      });
+      await fetchEmployerData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update job status");
+    } finally {
+      setTogglingJobId(null);
+    }
+  };
+
   // Open custom modal for job deletion
   const openDeleteModal = (jobId) => {
     setJobToDelete(jobId);
@@ -139,7 +189,16 @@ const Dashboard = () => {
     jobsData.forEach((job) => {
       if (Array.isArray(job.applications)) {
         job.applications.forEach((app) => {
-          list.push({ ...app, jobTitle: job.title, jobId: job.id || job._id });
+          list.push({ 
+            ...app, 
+            jobTitle: job.title, 
+            jobId: job.id || job._id,
+            applicantName: app.applicantName || app.applicant?.name || app.name || "Candidate",
+            applicantEmail: app.applicantEmail || app.applicant?.email || app.email || "No email attached",
+            applicantPhone: app.applicantPhone || app.applicant?.phone || app.phone || "Not provided",
+            resumeUrl: app.resumeUrl || app.applicant?.resumeUrl || app.resume || app.applicant?.resume,
+            coverLetter: app.coverLetter || app.letter
+          });
         });
       }
     });
@@ -196,47 +255,82 @@ const Dashboard = () => {
                 <p className="text-xs text-slate-500 mt-1">Click above to post your first position.</p>
               </div>
             ) : (
-              jobsData.map((job) => (
-                <div
-                  key={job.id || job._id}
-                  className="p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm hover:border-blue-400/50 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                >
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">{job.title}</h3>
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mt-2">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {job.location || job.city || "Remote"}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Building2 className="w-3.5 h-3.5" />
-                        {job.category || "Engineering"}
-                      </span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
-                        {job.applications?.length || 0} Applicants
-                      </span>
+              jobsData.map((job) => {
+                const jobId = job.id || job._id;
+                const activeStatus = isJobActive(job);
+                const isToggling = togglingJobId === jobId;
+
+                return (
+                  <div
+                    key={jobId}
+                    className="p-6 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm hover:border-blue-400/50 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{job.title}</h3>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            activeStatus
+                              ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
+                          {activeStatus ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {job.location || job.city || "Remote"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5" />
+                          {job.category || "Engineering"}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold text-[11px]">
+                          {job.applications?.length || 0} Applicants
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <button
+                        onClick={() => handleToggleJobStatus(jobId, activeStatus)}
+                        disabled={isToggling}
+                        title={activeStatus ? "Deactivate Job" : "Activate Job"}
+                        className={`p-2.5 rounded-2xl transition-colors disabled:opacity-50 ${
+                          activeStatus
+                            ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        {isToggling ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : activeStatus ? (
+                          <ToggleRight className="w-4 h-4" />
+                        ) : (
+                          <ToggleLeft className="w-4 h-4" />
+                        )}
+                      </button>
+                      <Link
+                        to={`/edit-job/${jobId}`}
+                        className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+                        title="Edit Job"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => openDeleteModal(jobId)}
+                        disabled={actionLoading}
+                        className="p-2.5 rounded-2xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 transition-colors"
+                        title="Delete Job"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    <Link
-                      to={`/edit-job/${job.id || job._id}`}
-                      className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
-                      title="Edit Job"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Link>
-                    <button
-                      onClick={() => openDeleteModal(job.id || job._id)}
-                      disabled={actionLoading}
-                      className="p-2.5 rounded-2xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 transition-colors"
-                      title="Delete Job"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -247,8 +341,8 @@ const Dashboard = () => {
             {allApplications.filter((a) => ["pending", "submitted"].includes(a.status?.toLowerCase())).length === 0 ? (
               <div className="p-12 text-center bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-3xl backdrop-blur-md">
                 <Clock className="w-12 h-12 text-amber-500/60 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No Pending Queries</h3>
-                <p className="text-xs text-slate-500 mt-1">All applicant queries have been reviewed.</p>
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No Pending Applications</h3>
+                <p className="text-xs text-slate-500 mt-1">All applicant submissions have been reviewed.</p>
               </div>
             ) : (
               allApplications
@@ -256,38 +350,90 @@ const Dashboard = () => {
                 .map((app) => (
                   <div
                     key={app.id || app._id}
-                    className="p-6 bg-white/80 dark:bg-slate-900/80 border border-amber-200/60 dark:border-amber-900/40 rounded-3xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    className="p-6 bg-white/80 dark:bg-slate-900/80 border border-amber-200/60 dark:border-amber-900/40 rounded-3xl shadow-sm flex flex-col gap-5 hover:border-amber-400/50 transition-all"
                   >
-                    <div>
-                      <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                        Applied for: {app.jobTitle}
-                      </span>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1">
-                        {app.applicantName || app.name || "Candidate"}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1">
-                        <Mail className="w-3.5 h-3.5" />
-                        {app.applicantEmail || app.email || "No email attached"}
-                      </p>
+                    {/* Top Info Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <div>
+                        <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider bg-amber-50 dark:bg-amber-950/50 px-3 py-1 rounded-full border border-amber-200/50">
+                          Applied for: {app.jobTitle}
+                        </span>
+                        <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mt-2">
+                          {app.applicantName}
+                        </h3>
+                      </div>
+
+                      {/* Contact Badges */}
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          <Mail className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                          {app.applicantEmail}
+                        </span>
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          {app.applicantPhone}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      <button
-                        onClick={() => handleApplicationStatus(app.id || app._id, "Accepted")}
-                        disabled={actionLoading}
-                        className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm"
-                      >
-                        <Check className="w-4 h-4" />
-                        <span>Accept</span>
-                      </button>
-                      <button
-                        onClick={() => handleApplicationStatus(app.id || app._id, "Rejected")}
-                        disabled={actionLoading}
-                        className="px-4 py-2 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm"
-                      >
-                        <X className="w-4 h-4" />
-                        <span>Decline</span>
-                      </button>
+                    {/* Cover Letter Section */}
+                    {app.coverLetter && (
+                      <div className="bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 p-4 rounded-2xl text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 mb-1">
+                          <FileText className="w-3.5 h-3.5 text-blue-500" />
+                          <span>Cover Letter Preview:</span>
+                        </div>
+                        <p className="line-clamp-3">{app.coverLetter}</p>
+                      </div>
+                    )}
+
+                    {/* Action Bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      {/* View Resume / CV Button */}
+                      {app.resumeUrl ? (
+                        <a
+                          href={formatResumeUrl(app.resumeUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 rounded-2xl bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 font-bold text-xs transition-all flex items-center gap-2 border border-blue-200/50"
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span>View Applicant CV</span>
+                          <ExternalLink className="w-3 h-3 ml-0.5" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">No CV attached</span>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2.5">
+                        <a
+                          href={`mailto:${app.applicantEmail}?subject=Interview Invitation for ${encodeURIComponent(app.jobTitle)} position at Jobnique`}
+                          className="px-4 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 font-semibold text-xs transition-all flex items-center gap-1.5 border border-indigo-200/50"
+                          title="Schedule Interview via Mail"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          <span>Send Message</span>
+                        </a>
+
+                        <button
+                          onClick={() => handleApplicationStatus(app.id || app._id, "Accepted")}
+                          disabled={actionLoading}
+                          className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Accept Candidate</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleApplicationStatus(app.id || app._id, "Rejected")}
+                          disabled={actionLoading}
+                          className="px-4 py-2 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+                        >
+                          <X className="w-4 h-4" />
+                          <span>Decline</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -298,7 +444,7 @@ const Dashboard = () => {
         {/* 3. ACTIVE LISTINGS SUB-WINDOW */}
         {activeWindow === "active" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {jobsData.filter((j) => j.status === "Active" || j.isOpen !== false).length === 0 ? (
+            {jobsData.filter((j) => isJobActive(j)).length === 0 ? (
               <div className="col-span-2 p-12 text-center bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-3xl backdrop-blur-md">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500/60 mx-auto mb-3" />
                 <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No Active Jobs</h3>
@@ -306,37 +452,58 @@ const Dashboard = () => {
               </div>
             ) : (
               jobsData
-                .filter((j) => j.status === "Active" || j.isOpen !== false)
-                .map((job) => (
-                  <div
-                    key={job.id || job._id}
-                    className="p-6 bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-900/40 rounded-3xl shadow-sm flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold mb-3">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Open & Receiving Resumes</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">{job.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
-                        {job.description}
-                      </p>
-                    </div>
+                .filter((j) => isJobActive(j))
+                .map((job) => {
+                  const jobId = job.id || job._id;
+                  const isToggling = togglingJobId === jobId;
 
-                    <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-500">
-                        {job.applications?.length || 0} Total Applicants
-                      </span>
-                      <Link
-                        to={`/edit-job/${job.id || job._id}`}
-                        className="text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
-                      >
-                        <span>Manage Listing</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </Link>
+                  return (
+                    <div
+                      key={jobId}
+                      className="p-6 bg-white/80 dark:bg-slate-900/80 border border-emerald-200/60 dark:border-emerald-900/40 rounded-3xl shadow-sm flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold mb-3">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Open & Receiving Resumes</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{job.title}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">
+                          {job.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-500">
+                          {job.applications?.length || 0} Total Applicants
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/edit-job/${jobId}`}
+                            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                            title="Edit Job Details"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => handleToggleJobStatus(jobId, true)}
+                            disabled={isToggling}
+                            className="px-3 py-2 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 font-bold flex items-center gap-1.5 transition-all disabled:opacity-50"
+                            title="Deactivate this listing"
+                          >
+                            {isToggling ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <ToggleRight className="w-3.5 h-3.5" />
+                            )}
+                            <span>Deactivate</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
             )}
           </div>
         )}
@@ -364,21 +531,22 @@ const Dashboard = () => {
                         <span>Hired for {app.jobTitle}</span>
                       </div>
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                        {app.applicantName || app.name || "Accepted Candidate"}
+                        {app.applicantName}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1">
                         <Mail className="w-3.5 h-3.5 text-slate-400" />
-                        {app.applicantEmail || app.email || "Contact details saved"}
+                        {app.applicantEmail}
                       </p>
                     </div>
 
-                    <a
-                      href={`mailto:${app.applicantEmail || app.email}`}
-                      className="px-5 py-2.5 rounded-2xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold text-xs hover:opacity-90 transition-opacity flex items-center gap-2"
+                    {/* ✅ Triggers Popup Modal */}
+                    <button
+                      onClick={() => setSelectedCandidate(app)}
+                      className="px-5 py-2.5 rounded-2xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold text-xs hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm"
                     >
                       <Mail className="w-4 h-4" />
                       <span>Contact Candidate</span>
-                    </a>
+                    </button>
                   </div>
                 ))
             )}
@@ -391,7 +559,6 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-[#F4F7FB] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pt-24 pb-20 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
       <div className="max-w-7xl mx-auto space-y-8 animate-fadeIn">
-        
         {/* Render Sub-Window or Main Dashboard */}
         {activeWindow !== "main" && isEmployer ? (
           renderSubWindow()
@@ -444,7 +611,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* 2x2 3D Glassmorphism Cards Section for Employers */}
+            {/* 2x2 Glassmorphism Cards Section for Employers */}
             {isEmployer && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -466,14 +633,13 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    {/* Card 1 (Left 1): Jobs Posted */}
+                    {/* Card 1: Jobs Posted */}
                     <div
                       onClick={() => setActiveWindow("jobs")}
                       className="group cursor-pointer p-8 rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-2xl hover:border-blue-500/50 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[200px]"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
-                      
+
                       <div className="flex items-center justify-between relative z-10">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                           Jobs Posted
@@ -493,13 +659,13 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* Card 2 (Right 1): Pending Responses */}
+                    {/* Card 2: Pending Responses */}
                     <div
                       onClick={() => setActiveWindow("pending")}
                       className="group cursor-pointer p-8 rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-2xl hover:border-amber-500/50 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[200px]"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
-                      
+
                       <div className="flex items-center justify-between relative z-10">
                         <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                           Pending Responses
@@ -524,13 +690,13 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* Card 3 (Left 2): Active Listings */}
+                    {/* Card 3: Active Listings */}
                     <div
                       onClick={() => setActiveWindow("active")}
                       className="group cursor-pointer p-8 rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-2xl hover:border-emerald-500/50 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[200px]"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
-                      
+
                       <div className="flex items-center justify-between relative z-10">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                           Active Listings
@@ -550,13 +716,13 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* Card 4 (Right 2): Hired Candidates */}
+                    {/* Card 4: Hired Candidates */}
                     <div
                       onClick={() => setActiveWindow("hired")}
                       className="group cursor-pointer p-8 rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-[0_10px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] hover:shadow-2xl hover:border-sky-500/50 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[200px]"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 dark:bg-sky-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
-                      
+
                       <div className="flex items-center justify-between relative z-10">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                           Hired Candidates
@@ -575,7 +741,6 @@ const Dashboard = () => {
                         </p>
                       </div>
                     </div>
-
                   </div>
                 )}
               </div>
@@ -603,6 +768,104 @@ const Dashboard = () => {
               </div>
             )}
           </>
+        )}
+
+        {/* ✅ Contact Candidate Interactive Modal */}
+        {selectedCandidate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+            <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative">
+              {/* Close Icon Button */}
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-3 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 rounded-2xl">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Candidate Info</h3>
+                  <p className="text-xs font-semibold text-sky-600 dark:text-sky-400">
+                    Hired for {selectedCandidate.jobTitle}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {/* Candidate Name */}
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Full Name
+                  </span>
+                  <p className="text-slate-900 dark:text-white font-semibold text-sm">
+                    {selectedCandidate.applicantName}
+                  </p>
+                </div>
+
+                {/* Email Address */}
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Email Address
+                  </span>
+                  <a
+                    href={`mailto:${selectedCandidate.applicantEmail}`}
+                    className="text-sky-600 dark:text-sky-400 hover:underline font-medium text-sm flex items-center gap-1.5"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>{selectedCandidate.applicantEmail}</span>
+                  </a>
+                </div>
+
+                {/* Phone Number */}
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Phone Number
+                  </span>
+                  <a
+                    href={`tel:${selectedCandidate.applicantPhone}`}
+                    className="text-slate-800 dark:text-slate-200 hover:text-sky-600 font-medium text-sm flex items-center gap-1.5"
+                  >
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    <span>{selectedCandidate.applicantPhone || "Not provided"}</span>
+                  </a>
+                </div>
+
+                {/* Resume URL */}
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Resume Document
+                  </span>
+                  {selectedCandidate.resumeUrl ? (
+                    <a
+                      href={formatResumeUrl(selectedCandidate.resumeUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sky-600 dark:text-sky-400 hover:underline font-semibold text-sm mt-1"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>View Resume (PDF)</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="text-slate-400 text-xs italic">No resume attached</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Close Action */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setSelectedCandidate(null)}
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl text-xs transition-all"
+                >
+                  Close Panel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Custom In-App Deletion Confirmation Modal */}
@@ -646,7 +909,6 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

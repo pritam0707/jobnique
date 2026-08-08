@@ -46,6 +46,8 @@ router.post("/toggle-save/:id", isAuthenticated, toggleSaveJob);
 // ==========================================
 // Update & Delete Routes
 // ==========================================
+// Status update endpoint for frontend toggle
+router.put("/status/:id", isAuthenticated, updateJob);
 router.put("/update/:id", isAuthenticated, updateJob);
 router.put("/:id", isAuthenticated, updateJob);
 

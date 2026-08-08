@@ -121,7 +121,7 @@ const Navbar = () => {
                   title="View all posted jobs"
                 >
                   <Layers className={`w-4 h-4 ${isMyJobsActive ? "text-[#2F80ED] dark:text-blue-400" : "text-[#9CA3AF] dark:text-slate-400"}`} />
-                  <span>{postedJobsCount} Added</span>
+                  <span> JobPosted</span>
                 </Link>
               </div>
             )}
