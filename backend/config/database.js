@@ -24,7 +24,4 @@ const connectDB = async () => {
 };
 require("dotenv").config();
 
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_PASSWORD:", JSON.stringify(process.env.DB_PASSWORD));
-
 module.exports = { sequelize, connectDB };
