@@ -18,28 +18,24 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: { isEmail: true },
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: true, // nullable to support Google OAuth users
+      allowNull: true,
     },
     googleId: {
       type: DataTypes.STRING,
       allowNull: true,
-      unique: true,
     },
     phone: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    // Company Name for Employers
     companyName: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    // Designation / Job Title for Employers
     designation: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -61,8 +57,6 @@ const User = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    
-    // ADDED: Fields for Password Reset Flow
     resetPasswordToken: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -71,8 +65,6 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-
-    // Saved Jobs column with auto JSON stringification/parsing
     savedJobs: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -101,6 +93,17 @@ const User = sequelize.define(
   {
     tableName: "users",
     timestamps: true,
+    // Safely manages unique constraints without causing duplicate key limit crashes on restart
+    indexes: [
+      {
+        unique: true,
+        fields: ["email"],
+      },
+      {
+        unique: true,
+        fields: ["googleId"],
+      },
+    ],
     hooks: {
       beforeSave: async (user) => {
         if (user.changed("password") && user.password) {

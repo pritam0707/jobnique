@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import MyApplicationsPanel from "../JobSeeker/MyApplicationsPanel";
 import AIRecommendationsPanel from "../JobSeeker/AIRecommendationsPanel";
+import NotificationDropdown from "../../components/NotificationDropdown";
 
 // Helper to point relative file paths to Express port 4000 for PDF viewing
 const formatResumeUrl = (url) => {
@@ -793,15 +794,18 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {activeWindow === "jobs" && (
-            <Link
-              to="/post-job"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Post New Job</span>
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            <NotificationDropdown />
+            {activeWindow === "jobs" && (
+              <Link
+                to="/post-job"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Post New Job</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* 1. POSTED JOBS SUB-WINDOW */}
@@ -1143,7 +1147,8 @@ const Dashboard = () => {
                   </p>
                 </div>
 
-                <div className="shrink-0">
+                <div className="shrink-0 flex items-center gap-3">
+                  <NotificationDropdown />
                   {isEmployer ? (
                     <Link
                       to="/post-job"

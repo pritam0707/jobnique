@@ -45,6 +45,8 @@ import AIRecommendationsPanel from "./AIRecommendationsPanel";
 import MyApplicationsPanel from "./MyApplicationsPanel";
 import InterviewPrepPanel from "./InterviewPrepPanel";
 
+import NotificationDropdown from "../../components/NotificationDropdown";
+
 // Formatted AI Output helper
 const FormattedAIOutput = ({ text }) => {
   if (!text) return null;
@@ -866,9 +868,12 @@ const Dashboard = () => {
               <span>Back to Dashboard</span>
             </button>
             
-            <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
-              {activeView.replace("-", " ")}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
+                {activeView.replace("-", " ")}
+              </span>
+              <NotificationDropdown />
+            </div>
           </div>
         ) : (
           /* Welcome Banner */
@@ -888,7 +893,8 @@ const Dashboard = () => {
               </p>
             </div>
 
-            <div>
+            <div className="flex items-center gap-3">
+              <NotificationDropdown />
               {isEmployer ? (
                 <Link
                   to="/post-job"
@@ -1186,4 +1192,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

@@ -9,6 +9,7 @@ const {
   updateJob,
   deleteJob,
   toggleSaveJob,
+  downloadJobPDF,
 } = require("../controllers/jobController");
 
 const { isAuthenticated } = require("../middlewares/auth");
@@ -53,6 +54,12 @@ router.put("/:id", isAuthenticated, updateJob);
 
 router.delete("/delete/:id", isAuthenticated, deleteJob);
 router.delete("/:id", isAuthenticated, deleteJob);
+
+// ==========================================
+// Job Description PDF
+// Keep this BEFORE the dynamic /:id route.
+// ==========================================
+router.get("/:id/pdf", downloadJobPDF);
 
 // ==========================================
 // Dynamic Single Job Route (Keep LAST)
