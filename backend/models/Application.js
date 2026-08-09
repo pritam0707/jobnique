@@ -28,8 +28,26 @@ const Application = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("Pending", "Reviewed", "Accepted", "Rejected"),
-      defaultValue: "Pending",
+      type: DataTypes.STRING,
+      defaultValue: "Applied",
+      allowNull: false,
+    },
+    // Added Interview Fields
+    interviewDate: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    interviewTime: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    interviewType: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    meetLink: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

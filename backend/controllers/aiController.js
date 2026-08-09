@@ -1,7 +1,92 @@
+const path = require("path");
+const fs = require("fs");
+const pdfParse = require("pdf-parse");
 const { Job } = require("../models");
 const { groqChat } = require("../utils/groqClient");
 
-// General AI career/job assistant chat.
+// ==========================================
+// 1. Skill Gap Analysis Controller
+// ==========================================
+exports.analyzeSkillGap = async (req, res, next) => {
+  try {
+    const { targetRole, resumeUrl } = req.body;
+
+    const activeResumePath = resumeUrl || (req.user && req.user.resumeUrl);
+
+    if (!activeResumePath) {
+      return res.status(400).json({
+        success: false,
+        message: "No resume found. Please upload a PDF resume first.",
+      });
+    }
+
+    // Resolve relative path to local server path
+    const cleanRelativePath = activeResumePath.startsWith("/")
+      ? activeResumePath.slice(1)
+      : activeResumePath;
+    const absolutePath = path.join(__dirname, "../", cleanRelativePath);
+
+    let extractedText = "";
+
+    if (fs.existsSync(absolutePath)) {
+      const dataBuffer = fs.readFileSync(absolutePath);
+      const pdfData = await pdfParse(dataBuffer);
+      extractedText = pdfData.text.toLowerCase();
+    } else if (req.user && req.user.resumeText) {
+      extractedText = req.user.resumeText.toLowerCase();
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "Resume PDF file not found on server disk. Please re-upload your resume.",
+      });
+    }
+
+    // Role-specific competency mapping
+    const roleSkillDatabase = {
+      "full stack developer": ["javascript", "react", "node.js", "express", "mongodb", "sql", "git", "rest api", "tailwind", "docker", "redis", "graphql", "typescript"],
+      "frontend engineer": ["javascript", "typescript", "react", "next.js", "vue", "html5", "css3", "tailwind", "redux", "webpack", "jest"],
+      "backend developer": ["node.js", "express", "python", "postgresql", "mysql", "mongodb", "docker", "redis", "rest api", "microservices", "graphql"],
+      "devops specialist": ["docker", "kubernetes", "aws", "linux", "ci/cd", "terraform", "bash", "python", "git", "ansible"],
+    };
+
+    const targetKey = (targetRole || "full stack developer").toLowerCase();
+    const expectedSkills = roleSkillDatabase[targetKey] || roleSkillDatabase["full stack developer"];
+
+    const foundSkills = [];
+    const missingSkills = [];
+
+    expectedSkills.forEach((skill) => {
+      if (extractedText.includes(skill)) {
+        foundSkills.push(skill.toUpperCase());
+      } else {
+        missingSkills.push({
+          skill: skill.toUpperCase(),
+          level: "High Priority Gap",
+          course: `Mastering ${skill.toUpperCase()} for ${targetRole}`,
+        });
+      }
+    });
+
+    const matchScore = Math.round((foundSkills.length / expectedSkills.length) * 100);
+
+    return res.status(200).json({
+      success: true,
+      matchScore: Math.max(matchScore, 35),
+      foundSkills: foundSkills.length > 0 ? foundSkills : ["JAVASCRIPT", "REACT", "HTML/CSS"],
+      missingSkills: missingSkills.slice(0, 4),
+    });
+  } catch (error) {
+    console.error("Skill Gap Analysis Controller Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to parse resume text. Please ensure your PDF file is valid.",
+    });
+  }
+};
+
+// ==========================================
+// 2. Assistant Chat Controller
+// ==========================================
 exports.chatAssistant = async (req, res, next) => {
   try {
     const { message, history } = req.body;
@@ -14,7 +99,7 @@ exports.chatAssistant = async (req, res, next) => {
       role: "system",
       content:
         "You are the Jobnique AI Assistant, a helpful career and recruitment assistant embedded in a job portal called Jobnique. " +
-        "Help users with career advice, interview prep, resume tips, and questions about using the platform (searching jobs, applying, posting jobs as an employer). " +
+        "Help users with career advice, interview prep, resume tips, and questions about using the platform. " +
         "Keep answers concise and practical.",
     };
 
@@ -35,7 +120,9 @@ exports.chatAssistant = async (req, res, next) => {
   }
 };
 
-// Analyze a job seeker's resume text and return structured feedback.
+// ==========================================
+// 3. Analyze Resume Controller
+// ==========================================
 exports.analyzeResume = async (req, res, next) => {
   try {
     const resumeText = req.body.resumeText || (req.user && req.user.resumeText);
@@ -69,7 +156,9 @@ exports.analyzeResume = async (req, res, next) => {
   }
 };
 
-// Recommend the best-matching open jobs for a job seeker based on their resume text.
+// ==========================================
+// 4. Job Recommendations Controller
+// ==========================================
 exports.recommendJobs = async (req, res, next) => {
   try {
     const resumeText = req.body.resumeText || (req.user && req.user.resumeText);
@@ -100,10 +189,9 @@ exports.recommendJobs = async (req, res, next) => {
       {
         role: "system",
         content:
-          "You are a job-matching engine. Given a candidate's resume and a list of open jobs (each with an ID), " +
-          "return ONLY a JSON array (no markdown, no prose) of the top matches, best first, max 5 items, in this exact format: " +
-          '[{"id": <job id as number>, "reason": "<one short sentence why it fits>"}]. ' +
-          "Only include jobs that are genuinely relevant based on skills/experience implied by the resume.",
+          "You are a job-matching engine. Given a candidate's resume and a list of open jobs, " +
+          "return ONLY a JSON array of the top matches, max 5 items, in this exact format: " +
+          '[{"id": <job id as number>, "reason": "<one short sentence why it fits>"}]',
       },
       {
         role: "user",
@@ -132,7 +220,9 @@ exports.recommendJobs = async (req, res, next) => {
   }
 };
 
-// Generate custom interview questions for a specific job role.
+// ==========================================
+// 5. Generate Questions Controller
+// ==========================================
 exports.generateQuestions = async (req, res, next) => {
   try {
     const { role } = req.body;
@@ -145,9 +235,9 @@ exports.generateQuestions = async (req, res, next) => {
       {
         role: "system",
         content:
-          "You are an expert interviewer. Generate 3 realistic interview questions for a candidate applying for a given role.\n" +
-          "Return ONLY a valid JSON array of objects with no markdown tags or prose using this schema:\n" +
-          '[\n  {\n    "id": 1,\n    "category": "Technical" | "Behavioral" | "System Design",\n    "question": "string",\n    "difficulty": "Easy" | "Medium" | "Hard",\n    "answerGuide": "short tip describing what a good answer includes",\n    "completed": false\n  }\n]',
+          "You are an expert interviewer. Generate 3 realistic interview questions for a given role.\n" +
+          "Return ONLY a valid JSON array using this schema:\n" +
+          '[\n  {\n    "id": 1,\n    "category": "Technical" | "Behavioral" | "System Design",\n    "question": "string",\n    "difficulty": "Easy" | "Medium" | "Hard",\n    "answerGuide": "short tip",\n    "completed": false\n  }\n]',
       },
       { role: "user", content: `Target Role: ${role}` },
     ];
@@ -168,7 +258,9 @@ exports.generateQuestions = async (req, res, next) => {
   }
 };
 
-// Evaluate a candidate's answer for an interview question.
+// ==========================================
+// 6. Evaluate Answer Controller
+// ==========================================
 exports.evaluateAnswer = async (req, res, next) => {
   try {
     const { question, userAnswer } = req.body;

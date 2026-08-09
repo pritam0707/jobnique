@@ -9,7 +9,6 @@ exports.applyToJob = async (req, res, next) => {
   try {
     const userRole = req.user.role ? req.user.role.toLowerCase().replace(/\s+/g, "") : "";
 
-    // Allow any jobseeker role format (e.g., "Job Seeker", "Jobseeker", "Candidate")
     if (userRole === "employer") {
       return res.status(403).json({
         success: false,
@@ -26,7 +25,6 @@ exports.applyToJob = async (req, res, next) => {
     if (req.files && req.files.resume) {
       const file = req.files.resume;
 
-      // Validate PDF MIME type and file extension
       const isPdf =
         file.mimetype === "application/pdf" ||
         file.name.toLowerCase().endsWith(".pdf");
@@ -38,30 +36,23 @@ exports.applyToJob = async (req, res, next) => {
         });
       }
 
-      // Ensure upload directory exists: backend/uploads/resumes
       const uploadDir = path.join(__dirname, "../uploads/resumes");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      // Generate a unique, web-safe filename
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
       const uniqueFileName = `${Date.now()}_${cleanFileName}`;
       const savePath = path.join(uploadDir, uniqueFileName);
 
-      // Move uploaded file from temp storage to the permanent uploads folder
       await file.mv(savePath);
-
-      // Store relative path for static serving
       resumeUrl = `/uploads/resumes/${uniqueFileName}`;
     }
 
-    // Fallback to resume stored in user profile
     if (!resumeUrl && req.user.resumeUrl) {
       resumeUrl = req.user.resumeUrl;
     }
 
-    // Validate that a resume exists
     if (!resumeUrl) {
       return res.status(400).json({
         success: false,
@@ -92,7 +83,7 @@ exports.applyToJob = async (req, res, next) => {
       applicantId: req.user.id,
       resumeUrl,
       coverLetter: coverLetter || "",
-      status: "Pending",
+      status: "Applied",
     });
 
     res.status(201).json({
@@ -167,32 +158,48 @@ exports.getJobApplications = async (req, res, next) => {
     next(error);
   }
 };
-
 // ==========================================
-// Update Application Status (Accept / Reject / Hire)
+// Update Application Status (Accept / Reject / Interview / Hire)
 // ==========================================
 exports.updateApplicationStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const { status, interviewDetails, date, time, type, meetLink } = req.body;
     const appId = req.params.id || req.params.applicationId;
 
-    const validStatuses = ["Pending", "Reviewed", "Accepted", "Rejected", "Hired"];
-
-    if (!validStatuses.includes(status)) {
+    if (!status) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status value. Must be one of: ${validStatuses.join(", ")}`,
+        message: "Status parameter is required",
       });
     }
+
+    // Standardize stage names
+    const statusMap = {
+      pending: "Pending",
+      applied: "Applied",
+      screened: "Interviewing",
+      interviewing: "Interviewing",
+      "interview invited": "Interviewing",
+      accepted: "Accepted",
+      hired: "Hired",
+      rejected: "Rejected",
+    };
+
+    const normalizedKey = String(status).trim().toLowerCase();
+    const mappedStatus = statusMap[normalizedKey] || "Pending";
 
     const application = await Application.findByPk(appId, {
       include: [{ model: Job, as: "job" }],
     });
 
     if (!application) {
-      return res.status(404).json({ success: false, message: "Application not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
     }
 
+    // Verify ownership
     const jobOwnerId =
       application.job?.postedBy || application.job?.employerId || application.job?.userId;
 
@@ -203,15 +210,39 @@ exports.updateApplicationStatus = async (req, res, next) => {
       });
     }
 
-    application.status = status;
+    // Update status field
+    application.status = mappedStatus;
+
+    // Assign optional interview details safely using raw attributes check
+    const modelAttributes = Object.keys(Application.rawAttributes || {});
+    
+    if (mappedStatus === "Interviewing") {
+      if (modelAttributes.includes("interviewDate")) {
+        application.interviewDate = date || interviewDetails?.date || null;
+      }
+      if (modelAttributes.includes("interviewTime")) {
+        application.interviewTime = time || interviewDetails?.time || null;
+      }
+      if (modelAttributes.includes("interviewType")) {
+        application.interviewType = type || interviewDetails?.type || null;
+      }
+      if (modelAttributes.includes("meetLink")) {
+        application.meetLink = meetLink || interviewDetails?.meetLink || null;
+      }
+    }
+
     await application.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: `Application status updated to ${status}`,
+      message: `Application status updated to ${mappedStatus}`,
       application,
     });
   } catch (error) {
-    next(error);
+    console.error("Error in updateApplicationStatus:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update application status",
+    });
   }
 };
