@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
+// Asset Import (Imports logo1.png directly from src/assets)
+import logoImage from "./assets/logo1.png";
+
 // Navigation & Widgets
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -77,6 +80,18 @@ export default function App() {
   const [showVideo, setShowVideo] = useState(() => {
     return localStorage.getItem("jobnique_has_seen_intro") !== "true";
   });
+
+  // Inject logo1.png asset URL into the browser tab icon
+  useEffect(() => {
+    let link = document.querySelector("link[rel*='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.type = "image/png";
+    link.href = logoImage;
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
