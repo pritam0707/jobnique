@@ -237,11 +237,11 @@ const ScheduledInterviewsPanel = () => {
           id: app.id || app._id,
           role: app.job?.title || app.jobTitle || "Position",
           company: app.job?.company || app.companyName || "Employer",
-          date: app.interviewDate || "Scheduled",
-          time: app.interviewTime || "Check Details",
-          type: app.interviewType || "Technical Round",
-          meetLink: app.meetLink || "https://meet.google.com",
-          platform: app.meetLink?.includes("zoom") ? "Zoom Video" : "Google Meet",
+          date: app.interviewDate || app.date || app.interviewDetails?.date || "Upcoming",
+          time: app.interviewTime || app.time || app.interviewDetails?.time || "TBD",
+          type: app.interviewType || app.interviewDetails?.type || "Technical Round",
+          meetLink: app.meetLink || app.interviewDetails?.meetLink || "https://meet.google.com",
+          platform: (app.meetLink || app.interviewDetails?.meetLink || "").includes("zoom") ? "Zoom Video" : "Google Meet",
           status: "Confirmed"
         }));
 
@@ -319,23 +319,21 @@ const ScheduledInterviewsPanel = () => {
                       {item.company}
                     </p>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-1">
-                    <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                      {item.date}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-amber-500" />
-                      {item.time}
-                    </span>
-                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
+                <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>{item.date}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <Clock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{item.time}</span>
+                  </span>
+
                   <button
                     onClick={() => handleCopyLink(item.id, item.meetLink)}
-                    className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center gap-1.5"
+                    className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center gap-1.5 shadow-sm"
                     title="Copy Meeting Link"
                   >
                     {copiedId === item.id ? (
@@ -355,10 +353,10 @@ const ScheduledInterviewsPanel = () => {
                     href={item.meetLink}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 lg:flex-none px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95"
+                    className="flex-1 lg:flex-none px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 active:scale-95"
                   >
-                    <Video className="w-4 h-4" />
-                    <span>Join Live Meeting ({item.platform})</span>
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Join Meeting</span>
                   </a>
                 </div>
               </div>
