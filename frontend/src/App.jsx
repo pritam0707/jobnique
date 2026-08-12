@@ -18,6 +18,7 @@ import Register from "./pages/Register";
 import JobDetails from "./pages/JobDetails";
 import SalaryCalculator from "./pages/SalaryCalculator";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword"; // 👈 ADDED IMPORT
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -136,6 +137,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} /> {/* 👈 ADDED ROUTE */}
 
           {/* Company & Support Pages */}
           <Route path="/about" element={<AboutUs />} />

@@ -1,4 +1,3 @@
-// src/pages/ForgotPassword.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
@@ -41,14 +40,11 @@ const ForgotPassword = () => {
     } catch (err) {
       console.error("Forgot Password Error:", err);
       
-      if (err.response?.status === 404) {
-        setError("API Endpoint not found. Please ensure backend server is restarted.");
-      } else {
-        setError(
-          err.response?.data?.message ||
-            "Failed to send reset email. Please check your email address and try again."
-        );
-      }
+      // 👇 Fixed this block so it shows the backend's "User Not Found" message!
+      setError(
+        err.response?.data?.message ||
+        "Failed to send reset email. Please check your email address and try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -100,7 +96,6 @@ const ForgotPassword = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {/* Email Field */}
             <div>
               <label className="block text-[14px] font-semibold text-[#111827] dark:text-[#F3F4F6] mb-2">

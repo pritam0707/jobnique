@@ -495,27 +495,51 @@ const HiringPipelinePanel = ({ jobsData, onStatusChange, onScheduleInterview }) 
 
 // --- SUB-WINDOW 2: Upcoming Interviews & Calendar Widget ---
 const InterviewsCalendarPanel = ({ interviewsList }) => {
+  const [filterDate, setFilterDate] = useState("");
+
+  const filteredInterviews = interviewsList.filter((item) => {
+    if (!filterDate) return true;
+    return item.date === filterDate;
+  });
+
   return (
     <div className="space-y-6">
       <div className="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-indigo-500" />
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Scheduled Interviews Calendar</h3>
           </div>
-          <button className="px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-200/50 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>Sync Google Calendar</span>
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Calendar Filter:</span>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            {filterDate && (
+              <button
+                onClick={() => setFilterDate("")}
+                className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
-          {interviewsList.length === 0 ? (
+          {filteredInterviews.length === 0 ? (
             <div className="p-10 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-              <p className="text-xs font-semibold text-slate-400">No interviews scheduled yet.</p>
+              <p className="text-xs font-semibold text-slate-400">
+                {filterDate ? `No interviews scheduled for ${filterDate}.` : "No interviews scheduled yet."}
+              </p>
             </div>
           ) : (
-            interviewsList.map((item) => (
+            filteredInterviews.map((item) => (
               <div
                 key={item.id}
                 className="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
@@ -1355,7 +1379,7 @@ const Dashboard = () => {
                           <ChevronRight className="w-5 h-5 text-indigo-500" />
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Organize candidate meetings with Google Meet/Zoom integration
+                          Organize candidate meetings with standard calendar and video links
                         </p>
                       </div>
                     </div>

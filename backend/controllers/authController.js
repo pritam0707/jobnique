@@ -5,10 +5,10 @@ const pdfParse = require("pdf-parse");
 const { OAuth2Client } = require("google-auth-library");
 const { User, Job } = require("../models");
 const sendToken = require("../utils/sendToken");
+const sendEmail = require("../utils/sendEmail");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Helper function to safely parse savedJobIds and fetch populated Job objects
 const getPopulatedSavedJobs = async (userSavedJobs) => {
   let savedJobIds = userSavedJobs || [];
 
@@ -96,9 +96,6 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// ==========================================
-// Google Login / Register Handler
-// ==========================================
 exports.googleLogin = async (req, res, next) => {
   try {
     const { token, role } = req.body;
@@ -176,11 +173,26 @@ exports.forgotPassword = async (req, res, next) => {
 
     const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
 
-    res.status(200).json({
-      success: true,
-      message: `Password reset link has been generated and sent to ${user.email}`,
-      resetUrl,
-    });
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Jobnique - Password Reset Request",
+        resetUrl: resetUrl,
+        message: `You requested a password reset for your Jobnique account. Please visit this URL to complete the reset: ${resetUrl}`,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Password reset link has been generated and sent to ${user.email}`,
+      });
+    } catch (err) {
+      user.resetPasswordToken = null;
+      user.resetPasswordExpire = null;
+      await user.save();
+
+      console.error("Email Sending Error:", err);
+      return res.status(500).json({ success: false, message: "Email could not be sent. Please try again later." });
+    }
   } catch (error) {
     next(error);
   }
