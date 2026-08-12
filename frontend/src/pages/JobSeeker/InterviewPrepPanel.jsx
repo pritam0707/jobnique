@@ -35,179 +35,180 @@ const InterviewPrepPanel = () => {
     {
       id: 1,
       category: "Technical",
-      question:
-        "Explain the Virtual DOM and how React handles state updates under the hood.",
+      question: "Explain the Virtual DOM and how React handles state updates under the hood.",
       difficulty: "Medium",
-      answerGuide:
-        "Mention reconciliation, fiber architecture, and batching state updates.",
+      answerGuide: "Mention reconciliation, fiber architecture, and batching state updates.",
       standardAnswer:
         "The Virtual DOM (VDOM) is an in-memory lightweight copy of the real DOM. When state changes occur in React, a new VDOM tree is generated. React compares it with the previous VDOM tree using a diffing algorithm (Reconciliation). React Fiber breaks work into chunks to prioritize urgent updates. Finally, React batches real DOM operations in a single render phase for optimal rendering performance.",
       completed: false,
+      userAnswer: "",
+      aiFeedback: "",
+      showAnswer: false,
     },
     {
       id: 2,
       category: "Behavioral",
-      question:
-        "Describe a time when you had an architectural disagreement with a teammate. How did you handle it?",
+      question: "Describe a time when you had an architectural disagreement with a teammate. How did you handle it?",
       difficulty: "Hard",
-      answerGuide:
-        "Use the STAR method: Situation, Task, Action, and quantifiable Outcome.",
+      answerGuide: "Use the STAR method: Situation, Task, Action, and quantifiable Outcome.",
       standardAnswer:
         "Situation: During a backend migration, a peer preferred REST while I advocated GraphQL for microservices.\nTask: Reach an architectural consensus without delaying project velocity.\nAction: I scheduled a quick benchmarking spike comparing payload size, response latency, and developer DX. We presented both metrics objectively.\nOutcome: We adopted GraphQL for high-frequency mobile endpoints and kept REST for simple CRUD routes, finishing two days ahead of schedule.",
       completed: false,
+      userAnswer: "",
+      aiFeedback: "",
+      showAnswer: false,
     },
     {
       id: 3,
       category: "Technical",
-      question:
-        "What is the difference between client-side rendering (CSR) and server-side rendering (SSR)?",
+      question: "What is the difference between client-side rendering (CSR) and server-side rendering (SSR)?",
       difficulty: "Medium",
-      answerGuide:
-        "Discuss initial load times, SEO impact, server burden, and hydration.",
+      answerGuide: "Discuss initial load times, SEO impact, server burden, and hydration.",
       standardAnswer:
         "CSR loads a minimal HTML file and renders UI in the browser using JavaScript (faster subsequent routing, but slower initial page load and poorer SEO). SSR renders full HTML on the server per request (faster Time To First Byte and SEO friendly), but increases server load and requires dynamic client-side hydration.",
       completed: false,
+      userAnswer: "",
+      aiFeedback: "",
+      showAnswer: false,
     },
     {
       id: 4,
       category: "System Design",
-      question:
-        "How would you design an asset pipeline to optimize image and font loading on a high-traffic web application?",
+      question: "How would you design an asset pipeline to optimize image and font loading on a high-traffic web application?",
       difficulty: "Hard",
-      answerGuide:
-        "Address WebP/AVIF formats, lazy loading, CDN caching strategies, and font subsetting.",
+      answerGuide: "Address WebP/AVIF formats, lazy loading, CDN caching strategies, and font subsetting.",
       standardAnswer:
         "1. Modern Formats & Compression: Serve AVIF/WebP formats using dynamic image optimization proxies.\n2. Lazy Loading & Srcset: Use native loading='lazy' and responsive srcset attributes.\n3. CDN Caching: Store static assets on edge nodes with long-term Cache-Control headers.\n4. Font Optimization: Use font-display: swap, preload critical subsets, and self-host variable WOFF2 fonts.",
       completed: false,
+      userAnswer: "",
+      aiFeedback: "",
+      showAnswer: false,
     },
     {
       id: 5,
       category: "Technical",
-      question:
-        "Explain JavaScript closures and provide a practical real-world use case.",
+      question: "Explain JavaScript closures and provide a practical real-world use case.",
       difficulty: "Medium",
-      answerGuide:
-        "Define lexical scoping, private variables, and memory retention risks.",
+      answerGuide: "Define lexical scoping, private variables, and memory retention risks.",
       standardAnswer:
         "A closure is a function bundled together with references to its surrounding lexical environment. It allows an inner function to access an outer function's scope even after the outer function has returned. A practical use case includes data privacy / encapsulating state (e.g., creating stateful factory functions or custom event listener hooks).",
       completed: false,
+      userAnswer: "",
+      aiFeedback: "",
+      showAnswer: false,
     },
     {
       id: 6,
       category: "Behavioral",
-      question:
-        "Tell me about a time you missed a project deadline or made a critical bug in production.",
+      question: "Tell me about a time you missed a project deadline or made a critical bug in production.",
       difficulty: "Hard",
-      answerGuide:
-        "Focus on accountability, immediate mitigation steps, and preventive measures implemented after.",
+      answerGuide: "Focus on accountability, immediate mitigation steps, and preventive measures implemented after.",
       standardAnswer:
         "I once pushed an unchecked database query that led to high CPU usage in production. I took immediate ownership, notified on-call engineering, and initiated a hotfix rollback within 10 minutes. Afterwards, I authored a blameless post-mortem and introduced automated load test gates in our CI/CD pipeline to prevent future performance regressions.",
       completed: false,
+      userAnswer: "",
+      aiFeedback: "",
+      showAnswer: false,
     },
   ]);
 
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [userAnswer, setUserAnswer] = useState("");
-  const [aiFeedback, setAiFeedback] = useState("");
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [evaluating, setEvaluating] = useState(false);
+  const [evaluatingId, setEvaluatingId] = useState(null);
   const [error, setError] = useState("");
 
-  const handleToggleExpand = (q) => {
-    if (selectedQuestion?.id === q.id) {
-      setSelectedQuestion(null);
-    } else {
-      setSelectedQuestion(q);
-      setUserAnswer("");
-      setAiFeedback("");
-      setShowAnswer(false);
-    }
+  const handleToggleExpand = (id) => {
+    setSelectedQuestionId((prevId) => (prevId === id ? null : id));
   };
 
   const generateQuestionsWithGrok = async () => {
     if (!roleInput.trim()) return;
     setLoading(true);
     setError("");
-    setAiFeedback("");
-    setShowAnswer(false);
 
     try {
       const res = await api.post("/ai/generate-questions", { role: roleInput });
       if (res.data.success && res.data.questions) {
-        setQuestions(res.data.questions);
-        setSelectedQuestion(null);
+        const formatted = res.data.questions.map((q, idx) => ({
+          ...q,
+          id: q.id || idx + 1,
+          standardAnswer: q.standardAnswer || "Model answer not provided for this AI-generated question.",
+          userAnswer: "",
+          aiFeedback: "",
+          showAnswer: false,
+          completed: false,
+        }));
+        setQuestions(formatted);
+        setSelectedQuestionId(null);
       }
     } catch (err) {
       console.error("Error generating questions:", err);
-      setError(
-        err.response?.data?.message || "Failed to generate interview questions."
-      );
+      setError(err.response?.data?.message || "Failed to generate interview questions.");
     } finally {
       setLoading(false);
     }
   };
 
-  const evaluateAnswerWithGrok = async () => {
-    if (!userAnswer.trim() || !selectedQuestion) return;
+  const evaluateAnswerWithGrok = async (q) => {
+    if (!q.userAnswer.trim()) return;
 
-    setEvaluating(true);
-    setAiFeedback("");
+    setEvaluatingId(q.id);
     setError("");
 
     try {
       const res = await api.post("/ai/evaluate-answer", {
-        question: selectedQuestion.question,
-        userAnswer,
+        question: q.question,
+        userAnswer: q.userAnswer,
       });
 
       if (res.data.success) {
-        setAiFeedback(res.data.feedback);
+        setQuestions((prev) =>
+          prev.map((item) => (item.id === q.id ? { ...item, aiFeedback: res.data.feedback } : item))
+        );
       }
     } catch (err) {
       console.error("Error evaluating answer:", err);
-      setAiFeedback("Unable to evaluate answer right now. Please try again.");
+      setQuestions((prev) =>
+        prev.map((item) =>
+          item.id === q.id ? { ...item, aiFeedback: "Unable to evaluate answer right now. Please try again." } : item
+        )
+      );
     } finally {
-      setEvaluating(false);
+      setEvaluatingId(null);
     }
+  };
+
+  const updateQuestionField = (id, field, value) => {
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)));
   };
 
   const toggleComplete = (id, e) => {
     e.stopPropagation();
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, completed: !q.completed } : q))
-    );
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, completed: !q.completed } : q)));
   };
 
-  // Helper function to extract numerical score from AI feedback string
-  const getParsedScore = () => {
-    if (!aiFeedback) return null;
-    const match = 
-      aiFeedback.match(/(?:Rating|Score):\s*\*?(\d+(?:\.\d+)?)\s*\/\s*(\d+)/i) ||
-      aiFeedback.match(/(\d+(?:\.\d+)?)\s*\/\s*10/);
+  const getParsedScore = (feedback) => {
+    if (!feedback) return null;
+    const match =
+      feedback.match(/(?:Rating|Score):\s*\*?(\d+(?:\.\d+)?)\s*\/\s*(\d+)/i) ||
+      feedback.match(/(\d+(?:\.\d+)?)\s*\/\s*10/);
 
     if (match) {
       return parseFloat(match[1]);
     }
 
-    // Fallback keyword detection if no ratio pattern was found
-    const lower = aiFeedback.toLowerCase();
+    const lower = feedback.toLowerCase();
     if (lower.includes("incomplete") || lower.includes("incorrect") || lower.includes("misunderstood")) {
       return 0;
     }
     return null;
   };
 
-  const extractedScore = getParsedScore();
-  const isBelowFive = extractedScore !== null && extractedScore < 5;
-
   const filteredQuestions =
     activeTab === "all"
       ? questions
-      : questions.filter(
-          (q) => q.category.toLowerCase() === activeTab.toLowerCase()
-        );
+      : questions.filter((q) => q.category.toLowerCase() === activeTab.toLowerCase());
 
   return (
     <div className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-2xl transition-colors duration-200 space-y-6">
@@ -254,11 +255,7 @@ const InterviewPrepPanel = () => {
             disabled={loading}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium rounded-xl transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-sm"
           >
-            {loading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5" />
-            )}
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
             <span>Generate</span>
           </button>
         </div>
@@ -292,12 +289,15 @@ const InterviewPrepPanel = () => {
       {/* Questions List */}
       <div className="space-y-3">
         {filteredQuestions.map((q, idx) => {
-          const isOpen = selectedQuestion?.id === q.id;
+          const isOpen = selectedQuestionId === q.id;
+          const extractedScore = getParsedScore(q.aiFeedback);
+          const isBelowFive = extractedScore !== null && extractedScore < 5;
+          const isEvaluating = evaluatingId === q.id;
 
           return (
             <div
               key={q.id ? `q-${q.id}` : `q-idx-${idx}`}
-              onClick={() => handleToggleExpand(q)}
+              onClick={() => handleToggleExpand(q.id)}
               className={`p-4 sm:p-5 rounded-xl border transition-all duration-200 space-y-3 cursor-pointer ${
                 isOpen
                   ? "border-indigo-500 dark:border-indigo-500 bg-slate-50/80 dark:bg-slate-950 shadow-sm"
@@ -312,9 +312,7 @@ const InterviewPrepPanel = () => {
                   >
                     <CheckCircle2
                       className={`w-5 h-5 ${
-                        q.completed
-                          ? "fill-emerald-500 text-white dark:text-slate-950"
-                          : ""
+                        q.completed ? "fill-emerald-500 text-white dark:text-slate-950" : ""
                       }`}
                     />
                   </button>
@@ -343,11 +341,7 @@ const InterviewPrepPanel = () => {
 
                 <div className="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-semibold rounded-xl transition-all flex items-center gap-1 shrink-0">
                   <span>{isOpen ? "Close" : "Practice"}</span>
-                  {isOpen ? (
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
+                  {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                 </div>
               </div>
 
@@ -359,16 +353,14 @@ const InterviewPrepPanel = () => {
                 >
                   {q.answerGuide && (
                     <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                      <strong className="font-semibold text-slate-700 dark:text-slate-300 not-italic">
-                        Tip:{" "}
-                      </strong>
+                      <strong className="font-semibold text-slate-700 dark:text-slate-300 not-italic">Tip: </strong>
                       {q.answerGuide}
                     </p>
                   )}
 
                   <textarea
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
+                    value={q.userAnswer}
+                    onChange={(e) => updateQuestionField(q.id, "userAnswer", e.target.value)}
                     placeholder="Type your practice response..."
                     rows={3}
                     className="w-full p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-indigo-500 transition-colors"
@@ -377,10 +369,10 @@ const InterviewPrepPanel = () => {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
-                      onClick={() => setShowAnswer((prev) => !prev)}
+                      onClick={() => updateQuestionField(q.id, "showAnswer", !q.showAnswer)}
                       className="px-3.5 py-1.5 bg-slate-200/60 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      {showAnswer ? (
+                      {q.showAnswer ? (
                         <>
                           <EyeOff className="w-3.5 h-3.5 text-slate-500" />
                           <span>Hide Standard Answer</span>
@@ -394,21 +386,17 @@ const InterviewPrepPanel = () => {
                     </button>
 
                     <button
-                      onClick={evaluateAnswerWithGrok}
-                      disabled={evaluating || !userAnswer.trim()}
+                      onClick={() => evaluateAnswerWithGrok(q)}
+                      disabled={isEvaluating || !q.userAnswer.trim()}
                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
-                      {evaluating ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Send className="w-3.5 h-3.5" />
-                      )}
+                      {isEvaluating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                       <span>Submit Answer</span>
                     </button>
                   </div>
 
-                  {/* Dynamic AI Feedback Card (Red on low score < 5/10) */}
-                  {aiFeedback && (
+                  {/* Dynamic AI Feedback Card */}
+                  {q.aiFeedback && (
                     <div
                       className={`p-4 rounded-xl text-xs transition-all duration-300 space-y-2 border ${
                         isBelowFive
@@ -419,9 +407,7 @@ const InterviewPrepPanel = () => {
                       <div className="flex items-center justify-between">
                         <span
                           className={`font-bold flex items-center gap-1.5 ${
-                            isBelowFive
-                              ? "text-rose-700 dark:text-rose-400"
-                              : "text-indigo-700 dark:text-indigo-400"
+                            isBelowFive ? "text-rose-700 dark:text-rose-400" : "text-indigo-700 dark:text-indigo-400"
                           }`}
                         >
                           {isBelowFive ? (
@@ -445,17 +431,16 @@ const InterviewPrepPanel = () => {
                         )}
                       </div>
 
-                      <p className="leading-relaxed">{aiFeedback}</p>
+                      <p className="leading-relaxed">{q.aiFeedback}</p>
 
-                      {/* Prompt to show model solution if score is below 5 */}
-                      {isBelowFive && !showAnswer && (
+                      {isBelowFive && !q.showAnswer && (
                         <div className="mt-3 pt-2 border-t border-rose-200/80 dark:border-rose-800/50 flex items-center justify-between gap-2">
                           <p className="text-[11px] text-rose-800 dark:text-rose-300 font-medium flex items-center gap-1">
                             <Lightbulb className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
                             <span>Your score was below 5/10. Review the model answer to improve your submission.</span>
                           </p>
                           <button
-                            onClick={() => setShowAnswer(true)}
+                            onClick={() => updateQuestionField(q.id, "showAnswer", true)}
                             className="text-[11px] font-bold text-rose-700 dark:text-rose-300 hover:underline shrink-0"
                           >
                             Show Solution →
@@ -466,7 +451,7 @@ const InterviewPrepPanel = () => {
                   )}
 
                   {/* Model Solution Box */}
-                  {showAnswer && (
+                  {q.showAnswer && (
                     <div className="p-4 bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-xs text-slate-800 dark:text-slate-200 space-y-1.5">
                       <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                         <HelpCircle className="w-3.5 h-3.5" />

@@ -237,12 +237,12 @@ exports.generateQuestions = async (req, res, next) => {
         content:
           "You are an expert interviewer. Generate 3 realistic interview questions for a given role.\n" +
           "Return ONLY a valid JSON array using this schema:\n" +
-          '[\n  {\n    "id": 1,\n    "category": "Technical" | "Behavioral" | "System Design",\n    "question": "string",\n    "difficulty": "Easy" | "Medium" | "Hard",\n    "answerGuide": "short tip",\n    "completed": false\n  }\n]',
+          '[\n  {\n    "id": 1,\n    "category": "Technical" | "Behavioral" | "System Design",\n    "question": "string",\n    "difficulty": "Easy" | "Medium" | "Hard",\n    "answerGuide": "short tip",\n    "standardAnswer": "comprehensive model answer explaining the concept clearly",\n    "completed": false\n  }\n]',
       },
       { role: "user", content: `Target Role: ${role}` },
     ];
 
-    const raw = await groqChat(messages, { temperature: 0.5, max_tokens: 800 });
+    const raw = await groqChat(messages, { temperature: 0.5, max_tokens: 1200 });
 
     let questions = [];
     try {
