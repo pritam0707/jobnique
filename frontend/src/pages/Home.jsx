@@ -108,13 +108,11 @@ const Home = () => {
     }
   };
 
-  // Helper handler for protected links in footer or navigation
+  // Helper handler for protected links in footer
   const handleProtectedLink = (e, targetPath) => {
     e.preventDefault();
     if (!isAuthenticated) {
       navigate("/login", { state: { from: targetPath } });
-    } else {
-      navigate(targetPath);
     }
   };
 
@@ -531,29 +529,41 @@ const Home = () => {
             {/* For JobSeeker */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">For JobSeeker</h4>
-              <ul className="space-y-2.5 text-xs">
+              <ul className={`space-y-2.5 text-xs ${isAuthenticated ? "opacity-50 pointer-events-none" : ""}`}>
                 <li>
-                  <Link to="/jobs" className="hover:text-indigo-400 transition-colors">
-                    Browse Jobs
-                  </Link>
+                  {isAuthenticated ? (
+                    <span className="cursor-not-allowed">Browse Jobs</span>
+                  ) : (
+                    <Link to="/jobs" className="hover:text-indigo-400 transition-colors">
+                      Browse Jobs
+                    </Link>
+                  )}
                 </li>
                 <li>
-                  <a
-                    href="/categories"
-                    onClick={(e) => handleProtectedLink(e, "/categories")}
-                    className="hover:text-indigo-400 transition-colors cursor-pointer"
-                  >
-                    Browse Categories
-                  </a>
+                  {isAuthenticated ? (
+                    <span className="cursor-not-allowed">Browse Categories</span>
+                  ) : (
+                    <a
+                      href="/categories"
+                      onClick={(e) => handleProtectedLink(e, "/categories")}
+                      className="hover:text-indigo-400 transition-colors cursor-pointer"
+                    >
+                      Browse Categories
+                    </a>
+                  )}
                 </li>
                 <li>
-                  <a
-                    href="/jobseeker/dashboard"
-                    onClick={(e) => handleProtectedLink(e, "/jobseeker/dashboard")}
-                    className="hover:text-indigo-400 transition-colors cursor-pointer"
-                  >
-                    Candidate Dashboard
-                  </a>
+                  {isAuthenticated ? (
+                    <span className="cursor-not-allowed">Candidate Dashboard</span>
+                  ) : (
+                    <a
+                      href="/jobseeker/dashboard"
+                      onClick={(e) => handleProtectedLink(e, "/jobseeker/dashboard")}
+                      className="hover:text-indigo-400 transition-colors cursor-pointer"
+                    >
+                      Candidate Dashboard
+                    </a>
+                  )}
                 </li>
               </ul>
             </div>
@@ -561,33 +571,45 @@ const Home = () => {
             {/* For Employers */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-slate-100 tracking-wide">For Employers</h4>
-              <ul className="space-y-2.5 text-xs">
+              <ul className={`space-y-2.5 text-xs ${isAuthenticated ? "opacity-50 pointer-events-none" : ""}`}>
                 <li>
-                  <a
-                    href="/post-job"
-                    onClick={(e) => handleProtectedLink(e, "/post-job")}
-                    className="hover:text-indigo-400 transition-colors cursor-pointer"
-                  >
-                    Post a Job
-                  </a>
+                  {isAuthenticated ? (
+                    <span className="cursor-not-allowed">Post a Job</span>
+                  ) : (
+                    <a
+                      href="/post-job"
+                      onClick={(e) => handleProtectedLink(e, "/post-job")}
+                      className="hover:text-indigo-400 transition-colors cursor-pointer"
+                    >
+                      Post a Job
+                    </a>
+                  )}
                 </li>
                 <li>
-                  <a
-                    href="/pricing"
-                    onClick={(e) => handleProtectedLink(e, "/pricing")}
-                    className="hover:text-indigo-400 transition-colors cursor-pointer"
-                  >
-                    Pricing Plans
-                  </a>
+                  {isAuthenticated ? (
+                    <span className="cursor-not-allowed">Pricing Plans</span>
+                  ) : (
+                    <a
+                      href="/pricing"
+                      onClick={(e) => handleProtectedLink(e, "/pricing")}
+                      className="hover:text-indigo-400 transition-colors cursor-pointer"
+                    >
+                      Pricing Plans
+                    </a>
+                  )}
                 </li>
                 <li>
-                  <a
-                    href="/employer-resources"
-                    onClick={(e) => handleProtectedLink(e, "/employer-resources")}
-                    className="hover:text-indigo-400 transition-colors cursor-pointer"
-                  >
-                    Employer Resources
-                  </a>
+                  {isAuthenticated ? (
+                    <span className="cursor-not-allowed">Employer Resources</span>
+                  ) : (
+                    <a
+                      href="/employer-resources"
+                      onClick={(e) => handleProtectedLink(e, "/employer-resources")}
+                      className="hover:text-indigo-400 transition-colors cursor-pointer"
+                    >
+                      Employer Resources
+                    </a>
+                  )}
                 </li>
               </ul>
             </div>

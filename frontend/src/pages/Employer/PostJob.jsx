@@ -15,12 +15,10 @@ import {
   Sparkles,
   ArrowLeft,
   CheckCircle2,
-  ClipboardList,
-  GraduationCap,
-  Users,
   CalendarDays,
   Clock3,
   Code2,
+  Users,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -66,7 +64,7 @@ const INITIAL_FORM = {
   workMode: "On-site",
 
   country: "India",
-  city: "",
+  city: "Bengaluru",
   location: "",
 
   salaryType: "fixed",
@@ -520,14 +518,14 @@ const PostJob = () => {
           <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-2xl flex items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
             <p className="text-xs text-slate-600 dark:text-slate-300">
-              Review the information carefully. These details will be shown to job seekers and included in the downloadable Jobnique job description PDF.
+              Review the information carefully. These details will be shown to job seekers and included in the job listing.
             </p>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 px-6 rounded-2xl font-semibold text-sm text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] shadow-md shadow-blue-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 px-6 rounded-2xl font-semibold text-sm text-white bg-gradient-to-r from-[#2F80ED] to-[#2563EB] shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

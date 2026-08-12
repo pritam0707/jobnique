@@ -13,7 +13,8 @@ import {
   Building2,
   SlidersHorizontal,
   Bookmark,
-  AlertCircle
+  AlertCircle,
+  Filter
 } from "lucide-react";
 
 // Synchronized Categories with PostJob.jsx
@@ -36,7 +37,12 @@ const Jobs = () => {
   const dispatch = useDispatch();
 
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Extract URL Query Parameters
   const initialSearch = searchParams.get("search") || "";
+  const minSalaryParam = searchParams.get("minSalary");
+  const maxSalaryParam = searchParams.get("maxSalary");
+  const locationParam = searchParams.get("location") || "";
 
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,12 +65,15 @@ const Jobs = () => {
     fetchJobs();
   }, []);
 
+  // Update URL Search Parameters dynamically while keeping existing salary filters if needed
   useEffect(() => {
-    if (searchTerm) {
-      setSearchParams({ search: searchTerm });
-    } else {
-      setSearchParams({});
-    }
+    const newParams = {};
+    if (searchTerm) newParams.search = searchTerm;
+    if (minSalaryParam) newParams.minSalary = minSalaryParam;
+    if (maxSalaryParam) newParams.maxSalary = maxSalaryParam;
+    if (locationParam) newParams.location = locationParam;
+
+    setSearchParams(newParams);
   }, [searchTerm, setSearchParams]);
 
   // Uses Redux thunk to toggle save status seamlessly
@@ -88,7 +97,6 @@ const Jobs = () => {
   const isJobSaved = (jobId) => {
     if (!user || !user.savedJobs) return false;
 
-    // Handles arrays whether they contain IDs ["1","2"] or populated objects [{id: "1"}]
     let savedList = user.savedJobs;
     if (typeof savedList === "string") {
       try {
@@ -111,13 +119,22 @@ const Jobs = () => {
     });
   };
 
-  // Safe Filtering Logic with optional chaining and fallback strings
+  // Clear Salary Filter Parameters
+  const clearSalaryFilter = () => {
+    const newParams = {};
+    if (searchTerm) newParams.search = searchTerm;
+    setSearchParams(newParams);
+  };
+
+  // Safe Filtering Logic with Salary Range & Location support
   const filteredJobs = jobs.filter((job) => {
+    // 1. Category Filter
     const jobCat = job.category || "";
     const matchesCategory =
       selectedCategory === "All" ||
       jobCat.toLowerCase() === selectedCategory.toLowerCase();
 
+    // 2. Search Text Filter
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       (job.title || "").toLowerCase().includes(searchLower) ||
@@ -126,7 +143,25 @@ const Jobs = () => {
       (job.city || "").toLowerCase().includes(searchLower) ||
       (job.country || "").toLowerCase().includes(searchLower);
 
-    return matchesCategory && matchesSearch;
+    // 3. Salary Range Filter
+    let matchesSalary = true;
+    if (minSalaryParam || maxSalaryParam) {
+      const filterMin = Number(minSalaryParam) || 0;
+      const filterMax = Number(maxSalaryParam) || Infinity;
+
+      if (job.fixedSalary) {
+        const salary = Number(job.fixedSalary);
+        // Job's fixed salary falls within the target range (with a 10% flexible margin)
+        matchesSalary = salary >= filterMin * 0.9 && salary <= filterMax * 1.1;
+      } else if (job.salaryFrom || job.salaryTo) {
+        const jobMin = Number(job.salaryFrom) || 0;
+        const jobMax = Number(job.salaryTo) || Infinity;
+        // Checks if salary ranges overlap
+        matchesSalary = jobMax >= filterMin && jobMin <= filterMax;
+      }
+    }
+
+    return matchesCategory && matchesSearch && matchesSalary;
   });
 
   return (
@@ -149,6 +184,28 @@ const Jobs = () => {
             Showing <span className="font-semibold text-[#111827] dark:text-white">{filteredJobs.length}</span> verified active positions across engineering, product, and operations.
           </p>
         </div>
+
+        {/* Active Salary Filter Banner (Appears when redirected from Salary Calculator) */}
+        {(minSalaryParam || maxSalaryParam) && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-[#EDF5FF] dark:bg-[#2F80ED]/10 border border-[#2F80ED]/30 rounded-2xl text-sm text-[#2F80ED] dark:text-[#56CCF2]">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 shrink-0" />
+              <span>
+                Filtering by Calculated Salary Range:{" "}
+                <strong className="font-bold text-[#111827] dark:text-white">
+                  ₹{Number(minSalaryParam).toLocaleString("en-IN")} – ₹{Number(maxSalaryParam).toLocaleString("en-IN")}
+                </strong>
+              </span>
+            </div>
+            <button
+              onClick={clearSalaryFilter}
+              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider underline hover:opacity-80 transition-opacity"
+            >
+              <span>Clear Salary Filter</span>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Search & Filter Controls Panel */}
         <div className="bg-white dark:bg-[#111827] border border-[#E5E7EB] dark:border-[#1F2937] rounded-3xl p-4 shadow-sm space-y-4 transition-colors duration-300">
@@ -175,16 +232,17 @@ const Jobs = () => {
             </div>
 
             {/* Reset Filters Button */}
-            {(searchTerm || selectedCategory !== "All") && (
+            {(searchTerm || selectedCategory !== "All" || minSalaryParam || maxSalaryParam) && (
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setSelectedCategory("All");
+                  clearSalaryFilter();
                 }}
                 className="w-full md:w-auto px-5 py-3 bg-[#F7FAFC] dark:bg-[#1F2937] hover:bg-[#EDF5FF] dark:hover:bg-[#374151] text-[#111827] dark:text-white rounded-2xl text-sm font-medium border border-[#E5E7EB] dark:border-[#374151] transition-colors shrink-0 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <SlidersHorizontal className="w-4 h-4 text-[#9CA3AF]" />
-                <span>Reset Filters</span>
+                <span>Reset All Filters</span>
               </button>
             )}
           </div>
@@ -243,16 +301,17 @@ const Jobs = () => {
             </div>
             <h3 className="text-xl font-bold text-[#111827] dark:text-white mb-2 tracking-tight">No Matching Positions Found</h3>
             <p className="text-[#6B7280] dark:text-[#9CA3AF] text-sm mb-8 leading-relaxed max-w-md mx-auto">
-              We couldn't find any jobs matching "{searchTerm}". Try tweaking your search keywords or clearing your category filters to see more results.
+              We couldn't find any active jobs matching your criteria. Try expanding or resetting your price range and keyword filters.
             </p>
             <button
               onClick={() => {
                 setSearchTerm("");
                 setSelectedCategory("All");
+                clearSalaryFilter();
               }}
               className="px-6 py-3 bg-[#2F80ED] hover:bg-[#2563EB] text-white rounded-2xl text-sm font-medium transition-all shadow-md active:scale-[0.98]"
             >
-              Clear Search Query
+              Reset Search & Price Filters
             </button>
           </div>
         ) : (

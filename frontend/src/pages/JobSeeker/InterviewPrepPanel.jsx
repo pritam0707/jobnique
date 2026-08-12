@@ -9,6 +9,12 @@ import {
   Loader2,
   Send,
   AlertCircle,
+  HelpCircle,
+  Eye,
+  EyeOff,
+  Lightbulb,
+  XCircle,
+  Award,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -34,6 +40,8 @@ const InterviewPrepPanel = () => {
       difficulty: "Medium",
       answerGuide:
         "Mention reconciliation, fiber architecture, and batching state updates.",
+      standardAnswer:
+        "The Virtual DOM (VDOM) is an in-memory lightweight copy of the real DOM. When state changes occur in React, a new VDOM tree is generated. React compares it with the previous VDOM tree using a diffing algorithm (Reconciliation). React Fiber breaks work into chunks to prioritize urgent updates. Finally, React batches real DOM operations in a single render phase for optimal rendering performance.",
       completed: false,
     },
     {
@@ -44,6 +52,8 @@ const InterviewPrepPanel = () => {
       difficulty: "Hard",
       answerGuide:
         "Use the STAR method: Situation, Task, Action, and quantifiable Outcome.",
+      standardAnswer:
+        "Situation: During a backend migration, a peer preferred REST while I advocated GraphQL for microservices.\nTask: Reach an architectural consensus without delaying project velocity.\nAction: I scheduled a quick benchmarking spike comparing payload size, response latency, and developer DX. We presented both metrics objectively.\nOutcome: We adopted GraphQL for high-frequency mobile endpoints and kept REST for simple CRUD routes, finishing two days ahead of schedule.",
       completed: false,
     },
     {
@@ -54,6 +64,8 @@ const InterviewPrepPanel = () => {
       difficulty: "Medium",
       answerGuide:
         "Discuss initial load times, SEO impact, server burden, and hydration.",
+      standardAnswer:
+        "CSR loads a minimal HTML file and renders UI in the browser using JavaScript (faster subsequent routing, but slower initial page load and poorer SEO). SSR renders full HTML on the server per request (faster Time To First Byte and SEO friendly), but increases server load and requires dynamic client-side hydration.",
       completed: false,
     },
     {
@@ -64,6 +76,8 @@ const InterviewPrepPanel = () => {
       difficulty: "Hard",
       answerGuide:
         "Address WebP/AVIF formats, lazy loading, CDN caching strategies, and font subsetting.",
+      standardAnswer:
+        "1. Modern Formats & Compression: Serve AVIF/WebP formats using dynamic image optimization proxies.\n2. Lazy Loading & Srcset: Use native loading='lazy' and responsive srcset attributes.\n3. CDN Caching: Store static assets on edge nodes with long-term Cache-Control headers.\n4. Font Optimization: Use font-display: swap, preload critical subsets, and self-host variable WOFF2 fonts.",
       completed: false,
     },
     {
@@ -74,6 +88,8 @@ const InterviewPrepPanel = () => {
       difficulty: "Medium",
       answerGuide:
         "Define lexical scoping, private variables, and memory retention risks.",
+      standardAnswer:
+        "A closure is a function bundled together with references to its surrounding lexical environment. It allows an inner function to access an outer function's scope even after the outer function has returned. A practical use case includes data privacy / encapsulating state (e.g., creating stateful factory functions or custom event listener hooks).",
       completed: false,
     },
     {
@@ -84,6 +100,8 @@ const InterviewPrepPanel = () => {
       difficulty: "Hard",
       answerGuide:
         "Focus on accountability, immediate mitigation steps, and preventive measures implemented after.",
+      standardAnswer:
+        "I once pushed an unchecked database query that led to high CPU usage in production. I took immediate ownership, notified on-call engineering, and initiated a hotfix rollback within 10 minutes. Afterwards, I authored a blameless post-mortem and introduced automated load test gates in our CI/CD pipeline to prevent future performance regressions.",
       completed: false,
     },
   ]);
@@ -92,6 +110,7 @@ const InterviewPrepPanel = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [aiFeedback, setAiFeedback] = useState("");
+  const [showAnswer, setShowAnswer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const [error, setError] = useState("");
@@ -103,6 +122,7 @@ const InterviewPrepPanel = () => {
       setSelectedQuestion(q);
       setUserAnswer("");
       setAiFeedback("");
+      setShowAnswer(false);
     }
   };
 
@@ -111,6 +131,7 @@ const InterviewPrepPanel = () => {
     setLoading(true);
     setError("");
     setAiFeedback("");
+    setShowAnswer(false);
 
     try {
       const res = await api.post("/ai/generate-questions", { role: roleInput });
@@ -159,6 +180,28 @@ const InterviewPrepPanel = () => {
     );
   };
 
+  // Helper function to extract numerical score from AI feedback string
+  const getParsedScore = () => {
+    if (!aiFeedback) return null;
+    const match = 
+      aiFeedback.match(/(?:Rating|Score):\s*\*?(\d+(?:\.\d+)?)\s*\/\s*(\d+)/i) ||
+      aiFeedback.match(/(\d+(?:\.\d+)?)\s*\/\s*10/);
+
+    if (match) {
+      return parseFloat(match[1]);
+    }
+
+    // Fallback keyword detection if no ratio pattern was found
+    const lower = aiFeedback.toLowerCase();
+    if (lower.includes("incomplete") || lower.includes("incorrect") || lower.includes("misunderstood")) {
+      return 0;
+    }
+    return null;
+  };
+
+  const extractedScore = getParsedScore();
+  const isBelowFive = extractedScore !== null && extractedScore < 5;
+
   const filteredQuestions =
     activeTab === "all"
       ? questions
@@ -180,7 +223,7 @@ const InterviewPrepPanel = () => {
               AI Interview Prep
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              AI-generated questions and instant feedback tailored to your target role.
+              AI-generated questions, instant feedback, and model solutions tailored to your role.
             </p>
           </div>
         </div>
@@ -311,7 +354,7 @@ const InterviewPrepPanel = () => {
               {/* Opened State Details */}
               {isOpen && (
                 <div
-                  className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3 cursor-default"
+                  className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-4 cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {q.answerGuide && (
@@ -331,7 +374,25 @@ const InterviewPrepPanel = () => {
                     className="w-full p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-indigo-500 transition-colors"
                   />
 
-                  <div className="flex justify-end items-center">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowAnswer((prev) => !prev)}
+                      className="px-3.5 py-1.5 bg-slate-200/60 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {showAnswer ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Hide Standard Answer</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5 text-slate-500" />
+                          <span>View Standard Answer</span>
+                        </>
+                      )}
+                    </button>
+
                     <button
                       onClick={evaluateAnswerWithGrok}
                       disabled={evaluating || !userAnswer.trim()}
@@ -346,12 +407,74 @@ const InterviewPrepPanel = () => {
                     </button>
                   </div>
 
+                  {/* Dynamic AI Feedback Card (Red on low score < 5/10) */}
                   {aiFeedback && (
-                    <div className="p-4 bg-indigo-50/70 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl text-xs text-slate-700 dark:text-slate-300 space-y-1">
-                      <span className="font-bold text-indigo-700 dark:text-indigo-400 block">
-                        AI Feedback:
-                      </span>
+                    <div
+                      className={`p-4 rounded-xl text-xs transition-all duration-300 space-y-2 border ${
+                        isBelowFive
+                          ? "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80 text-rose-900 dark:text-rose-200"
+                          : "bg-indigo-50/70 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`font-bold flex items-center gap-1.5 ${
+                            isBelowFive
+                              ? "text-rose-700 dark:text-rose-400"
+                              : "text-indigo-700 dark:text-indigo-400"
+                          }`}
+                        >
+                          {isBelowFive ? (
+                            <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                          ) : (
+                            <Award className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                          )}
+                          AI Evaluation & Feedback:
+                        </span>
+
+                        {extractedScore !== null && (
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
+                              isBelowFive
+                                ? "bg-rose-100 dark:bg-rose-900/60 border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-200"
+                                : "bg-emerald-100 dark:bg-emerald-900/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200"
+                            }`}
+                          >
+                            Score: {extractedScore}/10
+                          </span>
+                        )}
+                      </div>
+
                       <p className="leading-relaxed">{aiFeedback}</p>
+
+                      {/* Prompt to show model solution if score is below 5 */}
+                      {isBelowFive && !showAnswer && (
+                        <div className="mt-3 pt-2 border-t border-rose-200/80 dark:border-rose-800/50 flex items-center justify-between gap-2">
+                          <p className="text-[11px] text-rose-800 dark:text-rose-300 font-medium flex items-center gap-1">
+                            <Lightbulb className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400" />
+                            <span>Your score was below 5/10. Review the model answer to improve your submission.</span>
+                          </p>
+                          <button
+                            onClick={() => setShowAnswer(true)}
+                            className="text-[11px] font-bold text-rose-700 dark:text-rose-300 hover:underline shrink-0"
+                          >
+                            Show Solution →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Model Solution Box */}
+                  {showAnswer && (
+                    <div className="p-4 bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-xs text-slate-800 dark:text-slate-200 space-y-1.5">
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        Standard Model Answer:
+                      </span>
+                      <p className="leading-relaxed whitespace-pre-line text-slate-700 dark:text-slate-300">
+                        {q.standardAnswer || "No model answer available for this question."}
+                      </p>
                     </div>
                   )}
                 </div>
